@@ -39,7 +39,7 @@ export default function StyledNavBar() {
           </Link>
         </NavbarItem>
         <NavbarItem isActive>
-          <Link href="#" aria-current="page">
+          <Link href="#" color="foreground" aria-current="page">
             Customers
           </Link>
         </NavbarItem>

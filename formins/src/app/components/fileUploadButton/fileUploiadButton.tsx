@@ -10,7 +10,7 @@ const doesAccept = (type: string, accept?: string) => {
 	if (!accept) {
 		return true;
 	}
-	
+
 	const acceptList = accept.split(',').map(c => c.trim());
 	let cond = false;
 	for (const acceptor of acceptList) {
@@ -46,14 +46,14 @@ export default function FileUploadButton(
 		}
 ) {
 	const inputRef = useRef<HTMLInputElement | null>(null);
-	const [ acceptance, setAcceptance ] = useState<null | 'ACCEPT' | 'REJECT'>(null);
+	const [acceptance, setAcceptance] = useState<null | 'ACCEPT' | 'REJECT'>(null);
 	const onDragEnter = useCallback((e: React.DragEvent<HTMLButtonElement>) => {
 		if (isEventAllowed(e, accept, multiple)) {
 			setAcceptance('ACCEPT');
 		} else {
 			setAcceptance('REJECT');
 		}
-	}, [ accept, multiple, setAcceptance ]);
+	}, [accept, multiple, setAcceptance]);
 	const onDragOver = useCallback((e: React.DragEvent<HTMLButtonElement>) => {
 		e.preventDefault();
 		if (isEventAllowed(e, accept, multiple)) {
@@ -61,15 +61,15 @@ export default function FileUploadButton(
 		} else {
 			setAcceptance('REJECT');
 		}
-	}, [ accept, multiple, setAcceptance ]);
+	}, [accept, multiple, setAcceptance]);
 	const onDragFinish = useCallback((e: React.DragEvent<HTMLButtonElement>) => {
 		setAcceptance(null);
-	}, [ setAcceptance ]);
+	}, [setAcceptance]);
 	const onDrop = useCallback((e: React.DragEvent<HTMLButtonElement>) => {
 		e.preventDefault();
 		e.persist();
 		e.stopPropagation();
-		
+
 		if (isEventAllowed(e, accept, multiple)) {
 			const items = Array.from(e.dataTransfer.items);
 			if (items.length) {
@@ -78,13 +78,13 @@ export default function FileUploadButton(
 		}
 
 		setAcceptance(null);
-	}, [ accept, multiple, onUpload, setAcceptance ]);
+	}, [accept, multiple, onUpload, setAcceptance]);
 	const onFileChosen = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 		onUpload?.(Array.from(e.target.files!));
-	}, [ onUpload ]);
+	}, [onUpload]);
 	const onButtonPress = useCallback(() => {
 		inputRef.current?.click();
-	}, [ inputRef ]);
+	}, [inputRef]);
 
 	return <form className={classNames?.wrapper}>
 		<label htmlFor='_upload'>
