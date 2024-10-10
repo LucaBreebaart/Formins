@@ -64,7 +64,7 @@ const AuthPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   };
 
   return (
-    <main className="flex justify-center items-center w-full min-h-dvh dark">
+    <main className="flex justify-center items-center w-full min-h-dvh dark bg-primary">
       <Card className="flex justify-center w-full max-w-sm h-fit">
         <CardHeader className="flex justify-center ">
           <h2 className="text-2xl font-bold">{isLogin ? "Login" : "Register"}</h2>

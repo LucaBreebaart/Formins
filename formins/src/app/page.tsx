@@ -7,6 +7,8 @@ import LoginPage from './(auth-pages)/sign-in/page';
 import { auth } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
+import { Spinner } from '@nextui-org/react';
+
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -25,13 +27,18 @@ export default function Home() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className='relative flex align-middle content-center min-h-dvh h-full bg-gray-1 text-foreground'>
+      <Spinner
+        size="lg"
+        labelColor="primary"
+      />
+    </div>;
   }
 
   return (
-    <main className='relative min-h-dvh h-full'>
+    <main className='relative min-h-dvh h-full bg-gray-1 text-foreground'>
       {isLoggedIn ? (
-        <div className='relative h-full min-h-dvh'>
+        <div className='relative h-full min-h-dvh dark'>
           <StyledNavBar />
           <Dashboard />
         </div>

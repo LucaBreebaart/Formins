@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Button, Input } from '@nextui-org/react';
+import React, { useState, useCallback } from 'react';
+import { Button } from '@nextui-org/react';
 import { storage } from '../firebase'; // Make sure this path is correct
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { useDropzone } from 'react-dropzone';
 
 interface ProcessedData {
   text: string;
@@ -13,11 +14,17 @@ const PDFUploadComponent: React.FC = () => {
   const [processing, setProcessing] = useState(false);
   const [processedData, setProcessedData] = useState<ProcessedData | null>(null);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      setFile(event.target.files[0]);
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles && acceptedFiles.length > 0) {
+      setFile(acceptedFiles[0]);
     }
-  };
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: { 'application/pdf': ['.pdf'] },
+    multiple: false
+  });
 
   const uploadAndProcessPDF = async () => {
     if (!file) return;
@@ -54,16 +61,30 @@ const PDFUploadComponent: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <Input
-        type="file"
-        accept="application/pdf"
-        onChange={handleFileChange}
-        className="w-full"
-      />
+      <div
+        {...getRootProps()}
+        className={`w-full p-6 mt-4 border-2 border-dashed rounded-lg text-center cursor-pointer transition-all duration-300 ${
+          isDragActive
+            ? 'border-blue-500 bg-blue-50'
+            : 'border-gray-300 hover:border-gray-400 hover:bg-blue-50'
+        }`}
+      >
+        <input {...getInputProps()} />
+        {file ? (
+          <p className="text-sm text-blue-500 ">File selected: {file.name}</p>
+        ) : isDragActive ? (
+          <p className="text-sm text-blue-500">Drop the PDF here ...</p>
+        ) : (
+          <p className="text-sm text-gray-500">
+            Drag and drop a PDF here, or click to select a file
+          </p>
+        )}
+      </div>
       <Button
-        color="primary"
+        color="secondary"
         onClick={uploadAndProcessPDF}
         disabled={!file || processing}
+        className="w-full"
       >
         {processing ? 'Processing...' : 'Upload and Process PDF'}
       </Button>
