@@ -41,6 +41,7 @@ export async function POST(request: Request) {
       })) || [];
     }) || [];
 
+    console.log(formFields);
     return NextResponse.json({ formFields });
   } catch (error) {
     console.error('Error processing PDF:', error);
