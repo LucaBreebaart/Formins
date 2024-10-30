@@ -1,102 +1,101 @@
-import React, { useState, useCallback } from 'react';
-import { Button } from '@nextui-org/react';
-import { storage } from '../firebase'; // Make sure this path is correct
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { useDropzone } from 'react-dropzone';
+// app/components/PDFUpload.tsx
+'use client';
 
-interface ProcessedData {
-  text: string;
-  // Add more fields as needed based on the information you want to extract
+import React, { useState } from 'react';
+import { Button } from '@nextui-org/react';
+
+interface FormField {
+  fieldName: string;
+  fieldValue: string;
 }
 
-const PDFUploadComponent: React.FC = () => {
+export default function PDFUploadComponent() {
   const [file, setFile] = useState<File | null>(null);
-  const [processing, setProcessing] = useState(false);
-  const [processedData, setProcessedData] = useState<ProcessedData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [fields, setFields] = useState<FormField[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (acceptedFiles && acceptedFiles.length > 0) {
-      setFile(acceptedFiles[0]);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile && selectedFile.type === 'application/pdf') {
+      setFile(selectedFile);
+      setError(null);
     }
-  }, []);
+  };
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: { 'application/pdf': ['.pdf'] },
-    multiple: false
-  });
-
-  const uploadAndProcessPDF = async () => {
+  const handleUpload = async () => {
     if (!file) return;
 
-    setProcessing(true);
+    setLoading(true);
+    setError(null);
+
+    const formData = new FormData();
+    formData.append('pdf', file);
 
     try {
-      // Upload PDF to Firebase Storage
-      const storageRef = ref(storage, 'pdfs/' + file.name);
-      await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(storageRef);
-
-      // Send the download URL to our API route for processing
       const response = await fetch('/api/process-pdf', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ pdfUrl: downloadURL }),
+        body: formData,
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to process PDF');
+        throw new Error(data.error || 'Failed to process PDF');
       }
 
-      const result = await response.json();
-      setProcessedData(result);
-    } catch (error) {
-      console.error('Error processing PDF:', error);
+      setFields(data.formFields);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to process PDF');
     } finally {
-      setProcessing(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-4">
-      <div
-        {...getRootProps()}
-        className={`w-full p-6 mt-4 border-2 border-dashed rounded-lg text-center cursor-pointer transition-all duration-300 ${
-          isDragActive
-            ? 'border-blue-500 bg-blue-50'
-            : 'border-gray-300 hover:border-gray-400 hover:bg-blue-50'
-        }`}
-      >
-        <input {...getInputProps()} />
-        {file ? (
-          <p className="text-sm text-blue-500 ">File selected: {file.name}</p>
-        ) : isDragActive ? (
-          <p className="text-sm text-blue-500">Drop the PDF here ...</p>
-        ) : (
-          <p className="text-sm text-gray-500">
-            Drag and drop a PDF here, or click to select a file
-          </p>
-        )}
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4">
+        <input
+          type="file"
+          accept="application/pdf"
+          onChange={handleFileChange}
+          className="block w-full text-sm text-gray-500
+            file:mr-4 file:py-2 file:px-4
+            file:rounded-full file:border-0
+            file:text-sm file:font-semibold
+            file:bg-violet-50 file:text-violet-700
+            hover:file:bg-violet-100"
+        />
+        
+        <Button
+          color="primary"
+          isLoading={loading}
+          onClick={handleUpload}
+          disabled={!file || loading}
+        >
+          {loading ? 'Processing...' : 'Process PDF'}
+        </Button>
       </div>
-      <Button
-        color="secondary"
-        onClick={uploadAndProcessPDF}
-        disabled={!file || processing}
-        className="w-full"
-      >
-        {processing ? 'Processing...' : 'Upload and Process PDF'}
-      </Button>
-      {processedData && (
-        <div>
-          <h2 className="text-xl font-semibold">Extracted Text:</h2>
-          <p>{processedData.text}</p>
-          {/* Display more extracted data here */}
+
+      {error && (
+        <div className="p-4 text-red-500 bg-red-50 rounded-md">
+          {error}
+        </div>
+      )}
+
+      {fields.length > 0 && (
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <h2 className="text-xl font-semibold mb-4">Extracted Fields</h2>
+          <div className="space-y-2">
+            {fields.map((field, index) => (
+              <div key={index} className="flex border-b py-2">
+                <span className="font-medium w-1/3">{field.fieldName}:</span>
+                <span className="w-2/3">{field.fieldValue}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
   );
-};
-
-export default PDFUploadComponent;
+}

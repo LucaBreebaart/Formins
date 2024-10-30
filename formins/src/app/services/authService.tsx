@@ -17,20 +17,6 @@ export const handleRegister = async ({ username, email, password, profilePhoto }
     const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user: User = userCredential.user;
 
-    // let photoURL = "";
-    // if (profilePhoto) {
-    //   if (typeof profilePhoto === 'string') {
-    //     // If profilePhoto is already a URL, use it directly
-    //     photoURL = profilePhoto;
-    //   } else if (profilePhoto instanceof File) {
-    //     // If profilePhoto is a File object, upload it
-    //     const fileName = `${user.uid}-${Date.now()}.jpg`;
-    //     const storageRef = ref(storage, fileName);
-    //     await uploadBytes(storageRef, profilePhoto);
-    //     photoURL = await getDownloadURL(storageRef);
-    //   }
-    // }
-
     await setDoc(doc(db, 'users', user.uid), {
       username: username,
       email: user.email,
