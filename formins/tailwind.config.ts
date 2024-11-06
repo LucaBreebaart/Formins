@@ -1,14 +1,15 @@
-import {nextui} from '@nextui-org/theme';
+import { nextui } from '@nextui-org/theme';
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: ["class"],
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
     "./node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}"
   ],
-theme: {
+  theme: {
     container: {
       center: true,
       padding: "2rem",
@@ -31,7 +32,7 @@ theme: {
         background: "#121212", // page background
         foreground: "#ffffff",
         primary: {
-          DEFAULT: "#121212", 
+          DEFAULT: "#121212",
           foreground: "#ffffff",
         },
         // secondary: {
@@ -93,7 +94,7 @@ theme: {
       },
     },
   },
-  darkMode: "class",
+
   plugins: [nextui()],
 };
 export default config;

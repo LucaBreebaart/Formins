@@ -1,6 +1,7 @@
 // app/api/process-pdf/route.ts
 import { NextResponse } from 'next/server';
 import { DocumentProcessorServiceClient } from '@google-cloud/documentai';
+import { ExtractedField } from '@/app/types/form';
 
 const client = new DocumentProcessorServiceClient({
   credentials: {
@@ -34,20 +35,20 @@ export async function POST(request: Request) {
       throw new Error('No document in response');
     }
 
-    const formFields = result.document.pages?.flatMap((page) => {
+    const formFields: ExtractedField[] = result.document.pages?.flatMap((page) => {
       return page.formFields?.map((field) => ({
         fieldName: field.fieldName?.textAnchor?.content || 'Unknown',
         fieldValue: field.fieldValue?.textAnchor?.content || '',
       })) || [];
     }) || [];
 
-    console.log(formFields);
     return NextResponse.json({ formFields });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error processing PDF:', error);
     return NextResponse.json({ 
       error: 'Failed to process PDF',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error.message || 'Unknown error',
+      code: error.code,
     }, { status: 500 });
   }
 }
