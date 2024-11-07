@@ -1,68 +1,120 @@
 // app/api/fill-form/route.ts
 import { NextResponse } from 'next/server';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, rgb } from 'pdf-lib';
+import { dataURLtoUint8Array, pixelsToPDFPoints } from '@/app/utils/pdfUtils';
 
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const pdfFile = formData.get('pdf') as File;
     const valuesJson = formData.get('values') as string;
-
-    // Debug log
-    console.log('Received values:', valuesJson);
-
+    
     if (!pdfFile || !valuesJson) {
       return NextResponse.json({
-        error: 'Missing required data',
-        details: {
-          hasPdf: !!pdfFile,
-          hasValues: !!valuesJson
-        }
+        error: 'Missing required data'
       }, { status: 400 });
     }
 
-    const values = JSON.parse(valuesJson) as Record<string, string>;
+    console.log('Received values:', valuesJson); // Debug log
 
-    // Debug log
-    console.log('Parsed values:', values);
-
-    // Load the PDF document
+    const values = JSON.parse(valuesJson);
     const pdfBytes = await pdfFile.arrayBuffer();
     const pdfDoc = await PDFDocument.load(pdfBytes);
     const form = pdfDoc.getForm();
-
-    // Get all available fields for debugging
-    const availableFields = form.getFields();
-    console.log('Available PDF fields:', availableFields.map(f => ({
-      name: f.getName(),
-      type: f.constructor.name
-    })));
-
-    // Fill each field with its corresponding value
+    const pages = pdfDoc.getPages();
+    
+    // Fill each field
     for (const [fieldName, value] of Object.entries(values)) {
       try {
-        // First try to get the field to see if it exists
-        const fields = form.getFields();
-        const field = fields.find(f => f.getName() === fieldName);
+        const field = form.getField(fieldName);
+        
+        if (!field) {
+          console.warn(`Field not found: ${fieldName}`);
+          continue;
+        }
 
-        if (field) {
-          if (field.constructor.name === 'PDFTextField') {
-            const textField = form.getTextField(fieldName);
-            await textField.setText(value);
-          } else {
-            console.log(`Field ${fieldName} is not a text field:`, field.constructor.name);
+        if (typeof value === 'string' && value.startsWith('data:image/png;base64,')) {
+          // Handle signature field
+          try {
+            const signatureBytes = dataURLtoUint8Array(value);
+            const signatureImage = await pdfDoc.embedPng(signatureBytes);
+
+            // Get field position from widget annotations
+            const widgets = field.acroField.getWidgets();
+            if (widgets.length === 0) {
+              throw new Error('No widget annotations found for signature field');
+            }
+
+            // Process each widget (there might be multiple instances of the same field)
+            for (const widget of widgets) {
+              // Get the page number for this widget
+              const pageRef = widget.P();
+              let pageNum = 0;
+
+              // Find the correct page number by comparing references
+              for (let i = 0; i < pages.length; i++) {
+                if (pages[i].ref === pageRef) {
+                  pageNum = i;
+                  break;
+                }
+              }
+
+              const page = pages[pageNum];
+              const { x, y, width, height } = widget.getRectangle();
+
+              // Calculate signature dimensions while maintaining aspect ratio
+              const signatureAspectRatio = signatureImage.width / signatureImage.height;
+              let signatureWidth = width;
+              let signatureHeight = height;
+
+              if (width / height > signatureAspectRatio) {
+                signatureWidth = height * signatureAspectRatio;
+              } else {
+                signatureHeight = width / signatureAspectRatio;
+              }
+
+              // Center the signature in the field
+              const xOffset = (width - signatureWidth) / 2;
+              const yOffset = (height - signatureHeight) / 2;
+
+              console.log(`Drawing signature for field ${fieldName} on page ${pageNum + 1}`, {
+                x: x + xOffset,
+                y: y + yOffset,
+                width: signatureWidth,
+                height: signatureHeight,
+              });
+
+              // Draw the signature
+              page.drawImage(signatureImage, {
+                x: x + xOffset,
+                y: y + yOffset,
+                width: signatureWidth,
+                height: signatureHeight
+              });
+            }
+
+            // Remove the original form field
+            form.removeField(field);
+          } catch (signatureError) {
+            console.error('Error processing signature for field:', fieldName, signatureError);
           }
-        } else {
-          console.log(`Field not found: ${fieldName}`);
+        } else if (field.constructor.name === 'PDFTextField') {
+          // Handle regular text field
+          const textField = form.getTextField(fieldName);
+          await textField.setText(value as string);
         }
       } catch (error) {
         console.error(`Error filling field ${fieldName}:`, error);
       }
     }
 
-    const filledPdfBytes = await pdfDoc.save();
+    // Flatten form fields to prevent further editing
+    form.flatten();
 
-    // Return the filled PDF
+    const filledPdfBytes = await pdfDoc.save({
+      updateFieldAppearances: true
+    });
+
     return new Response(filledPdfBytes, {
       headers: {
         'Content-Type': 'application/pdf',
@@ -71,17 +123,10 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    // Detailed error logging
-    console.error('Error in fill-form:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      error
-    });
-
+    console.error('Error in fill-form:', error);
     return NextResponse.json({
       error: 'Failed to fill form',
-      details: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
+      details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 }
