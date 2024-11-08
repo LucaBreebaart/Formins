@@ -1,7 +1,19 @@
-// app/api/fill-form/route.ts
 import { NextResponse } from 'next/server';
 import { PDFDocument, rgb } from 'pdf-lib';
-import { dataURLtoUint8Array } from '@/app/utils/pdfUtils';
+
+function dataURLtoUint8Array(dataURL: string): Uint8Array {
+  try {
+    const base64 = dataURL.split(',')[1];
+    if (!base64) {
+      throw new Error('Invalid data URL format');
+    }
+    const buffer = Buffer.from(base64, 'base64');
+    return new Uint8Array(buffer);
+  } catch (error) {
+    console.error('Error converting dataURL to Uint8Array:', error);
+    throw error;
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -82,9 +94,6 @@ export async function POST(request: Request) {
         console.error(`Error filling field ${fieldName}:`, error);
       }
     }
-
-    // Flatten form fields to prevent further editing
-    // form.flatten();
 
     const filledPdfBytes = await pdfDoc.save({
       updateFieldAppearances: true

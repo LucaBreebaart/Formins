@@ -1,23 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { Button, Input, Card, Checkbox } from '@nextui-org/react';
 import SignaturePad from 'react-signature-canvas';
-
-interface FormField {
-  name: string;
-  type: string;
-  page: number;
-  required: boolean;
-  suggestedValue?: string;
-  isSignature?: boolean;
-  isCheckbox?: boolean;
-  label?: string;
-}
-
-type SignatureCanvas = {
-  clear: () => void;
-  isEmpty: () => boolean;
-  toDataURL: (type?: string) => string;
-};
+import PDFPreview from './PDFPreview';
+import { FormField, SignatureCanvas } from '../types/form'
 
 export default function FormTemplate() {
   const [file, setFile] = useState<File | null>(null);
@@ -40,23 +25,23 @@ export default function FormTemplate() {
         body: formData,
       });
       const data = await response.json();
-      
+
       if (!response.ok) throw new Error(data.error);
-      
+
       // Process fields to identify signatures and checkboxes
       const processedFields = data.formFields.map((field: FormField) => ({
         ...field,
-        isSignature: field.name.toLowerCase().includes('signature') || 
-                    field.name.toLowerCase().includes('signiture') ||
-                    field.name.toLowerCase().includes('sign'),
-        isCheckbox: field.type === 'PDFCheckBox' || 
-                   field.name.toLowerCase().includes('confirm') ||
-                   field.name.toLowerCase().includes('accept') ||
-                   field.name.toLowerCase().includes('understand')
+        isSignature: field.name.toLowerCase().includes('signature') ||
+          field.name.toLowerCase().includes('signiture') ||
+          field.name.toLowerCase().includes('sign'),
+        isCheckbox: field.type === 'PDFCheckBox' ||
+          field.name.toLowerCase().includes('confirm') ||
+          field.name.toLowerCase().includes('accept') ||
+          field.name.toLowerCase().includes('understand')
       }));
 
       setFields(processedFields);
-      
+
       // Initialize values with suggested values and false for checkboxes
       const initialValues: Record<string, any> = {};
       processedFields.forEach((field: FormField) => {
@@ -84,7 +69,9 @@ export default function FormTemplate() {
       if (field.isSignature && signatureRefs.current[field.name]) {
         const signatureCanvas = signatureRefs.current[field.name];
         if (!signatureCanvas.isEmpty()) {
-          formValues[field.name] = signatureCanvas.toDataURL('image/png');
+          formValues[field.name] = signatureCanvas.toDataURL('image/png', {
+            includeBackgroundColor: false,
+          });
         }
       }
     });
@@ -118,93 +105,111 @@ export default function FormTemplate() {
 
   return (
     <div className="p-4">
-      <Card className="p-6">
-        <input
-          type="file"
-          onChange={handleFileChange}
-          accept=".pdf"
-          className="mb-4"
-        />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="p-6">
+          <input
+            type="file"
+            onChange={handleFileChange}
+            accept=".pdf"
+            className="mb-4"
+          />
 
-        {loading && <p>Analyzing form...</p>}
+          {loading && <p>Analyzing form...</p>}
 
-        {fields.length > 0 && (
-          <div className="space-y-4">
-            {fields.map((field) => (
-              <div key={field.name} className="space-y-2">
-                {field.isCheckbox ? (
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={field.name}
-                      checked={values[field.name] || false}
-                      onChange={(event) => 
-                        setValues({
-                          ...values, 
-                          [field.name]: event.target.checked
-                        })
-                      }
-                    />
-                    <label 
-                      htmlFor={field.name}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      {field.label || field.name}
-                    </label>
-                  </div>
-                ) : field.isSignature ? (
-                  <div className="border rounded p-2 bg-white">
-                    <label className="block text-sm font-medium mb-2">
-                      {field.name} {field.required && '*'}
-                    </label>
-                    <SignaturePad
-                      ref={(ref) => {
-                        if (ref) {
-                          signatureRefs.current[field.name] = ref;
+          {fields.length > 0 && (
+            <div className="space-y-4">
+              {fields.map((field) => (
+                <div key={field.name} className="space-y-2" id={field.name}>
+                  {field.isCheckbox ? (
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={field.name}
+                        isSelected={values[field.name] || false}
+                        onValueChange={(checked) =>
+                          setValues({
+                            ...values,
+                            [field.name]: checked
+                          })
                         }
-                      }}
-                      canvasProps={{
-                        className: 'signature-canvas',
-                        width: 500,
-                        height: 200,
-                        style: {
-                          width: '100%',
-                          height: '200px',
-                          maxWidth: '500px',
-                          backgroundColor: '#fff'
+                      />
+                      <label
+                        htmlFor={field.name}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        {field.label || field.name}
+                      </label>
+                    </div>
+                  ) : field.isSignature ? (
+                    <div className="border rounded p-2 bg-white">
+                      <label className="block text-sm font-medium mb-2">
+                        {field.name} {field.required && '*'}
+                      </label>
+                      <SignaturePad
+                        ref={(ref) => {
+                          if (ref) {
+                            signatureRefs.current[field.name] = ref;
+                          }
+                        }}
+                        canvasProps={{
+                          className: 'signature-canvas',
+                          width: 500,
+                          height: 200,
+                          style: {
+                            width: '100%',
+                            height: '200px',
+                            maxWidth: '500px',
+                            backgroundColor: '#fff',
+                            border: '1px solid #e2e8f0',
+                          }
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => signatureRefs.current[field.name]?.clear()}
+                        className="mt-2"
+                      >
+                        Clear Signature
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-sm font-medium">
+                        {field.name} {field.required && '*'}
+                      </label>
+                      <Input
+                        value={values[field.name] || ''}
+                        onChange={(e) =>
+                          setValues({ ...values, [field.name]: e.target.value })
                         }
-                      }}
-                    />
-                    <Button
-                      size="sm"
-                      onClick={() => signatureRefs.current[field.name]?.clear()}
-                      className="mt-2"
-                    >
-                      Clear Signature
-                    </Button>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-sm font-medium">
-                      {field.name} {field.required && '*'}
-                    </label>
-                    <Input
-                      value={values[field.name] || ''}
-                      onChange={(e) => 
-                        setValues({...values, [field.name]: e.target.value})
-                      }
-                      placeholder={field.suggestedValue || `Enter ${field.name}`}
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
-            
-            <Button onClick={handleFillForm} className="mt-4">
-              Fill and Download PDF
-            </Button>
-          </div>
+                        placeholder={field.suggestedValue || `Enter ${field.name}`}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              <Button onClick={handleFillForm} className="mt-4">
+                Fill and Download PDF
+              </Button>
+            </div>
+          )}
+        </Card>
+
+        {file && (
+          <PDFPreview
+            file={file}
+            fields={fields}
+            onFieldClick={(field) => {
+              const element = document.getElementById(field.name);
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+                const input = element.querySelector('input');
+                if (input) input.focus();
+              }
+            }}
+          />
         )}
-      </Card>
+      </div>
     </div>
   );
 }
