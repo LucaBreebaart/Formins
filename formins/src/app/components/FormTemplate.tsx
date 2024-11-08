@@ -1,8 +1,6 @@
-// app/components/FormTemplate.tsx
 import React, { useState, useRef } from 'react';
-import { Button, Input, Card } from '@nextui-org/react';
+import { Button, Input, Card, Checkbox } from '@nextui-org/react';
 import SignaturePad from 'react-signature-canvas';
-// import 'react-signature-canvas/styles.css';
 
 interface FormField {
   name: string;
@@ -11,6 +9,8 @@ interface FormField {
   required: boolean;
   suggestedValue?: string;
   isSignature?: boolean;
+  isCheckbox?: boolean;
+  label?: string;
 }
 
 type SignatureCanvas = {
@@ -23,7 +23,7 @@ export default function FormTemplate() {
   const [file, setFile] = useState<File | null>(null);
   const [fields, setFields] = useState<FormField[]>([]);
   const [loading, setLoading] = useState(false);
-  const [values, setValues] = useState<Record<string, string>>({});
+  const [values, setValues] = useState<Record<string, any>>({});
   const signatureRefs = useRef<{ [key: string]: SignatureCanvas }>({});
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,20 +43,28 @@ export default function FormTemplate() {
       
       if (!response.ok) throw new Error(data.error);
       
-      // Check for signature fields case-insensitively
+      // Process fields to identify signatures and checkboxes
       const processedFields = data.formFields.map((field: FormField) => ({
         ...field,
         isSignature: field.name.toLowerCase().includes('signature') || 
                     field.name.toLowerCase().includes('signiture') ||
-                    field.name.toLowerCase().includes('sign')
+                    field.name.toLowerCase().includes('sign'),
+        isCheckbox: field.type === 'PDFCheckBox' || 
+                   field.name.toLowerCase().includes('confirm') ||
+                   field.name.toLowerCase().includes('accept') ||
+                   field.name.toLowerCase().includes('understand')
       }));
 
       setFields(processedFields);
       
-      // Initialize values with suggested values
-      const initialValues: Record<string, string> = {};
+      // Initialize values with suggested values and false for checkboxes
+      const initialValues: Record<string, any> = {};
       processedFields.forEach((field: FormField) => {
-        initialValues[field.name] = field.suggestedValue || '';
+        if (field.isCheckbox) {
+          initialValues[field.name] = false;
+        } else {
+          initialValues[field.name] = field.suggestedValue || '';
+        }
       });
       setValues(initialValues);
       setFile(file);
@@ -70,19 +78,16 @@ export default function FormTemplate() {
   const handleFillForm = async () => {
     if (!file) return;
 
-    // Convert signatures to values before submitting
+    // Convert signatures to values and prepare checkbox values
     const formValues = { ...values };
     fields.forEach(field => {
       if (field.isSignature && signatureRefs.current[field.name]) {
         const signatureCanvas = signatureRefs.current[field.name];
         if (!signatureCanvas.isEmpty()) {
-          // Add a timestamp to ensure we're getting the latest signature
           formValues[field.name] = signatureCanvas.toDataURL('image/png');
         }
       }
     });
-
-    console.log('Submitting values:', formValues); // Debug log
 
     const formData = new FormData();
     formData.append('pdf', file);
@@ -127,12 +132,30 @@ export default function FormTemplate() {
           <div className="space-y-4">
             {fields.map((field) => (
               <div key={field.name} className="space-y-2">
-                <label className="block text-sm font-medium">
-                  {field.name} {field.required && '*'}
-                </label>
-                
-                {field.isSignature ? (
+                {field.isCheckbox ? (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id={field.name}
+                      checked={values[field.name] || false}
+                      onChange={(event) => 
+                        setValues({
+                          ...values, 
+                          [field.name]: event.target.checked
+                        })
+                      }
+                    />
+                    <label 
+                      htmlFor={field.name}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {field.label || field.name}
+                    </label>
+                  </div>
+                ) : field.isSignature ? (
                   <div className="border rounded p-2 bg-white">
+                    <label className="block text-sm font-medium mb-2">
+                      {field.name} {field.required && '*'}
+                    </label>
                     <SignaturePad
                       ref={(ref) => {
                         if (ref) {
@@ -160,13 +183,18 @@ export default function FormTemplate() {
                     </Button>
                   </div>
                 ) : (
-                  <Input
-                    value={values[field.name] || ''}
-                    onChange={(e) => 
-                      setValues({...values, [field.name]: e.target.value})
-                    }
-                    placeholder={field.suggestedValue || `Enter ${field.name}`}
-                  />
+                  <div>
+                    <label className="block text-sm font-medium">
+                      {field.name} {field.required && '*'}
+                    </label>
+                    <Input
+                      value={values[field.name] || ''}
+                      onChange={(e) => 
+                        setValues({...values, [field.name]: e.target.value})
+                      }
+                      placeholder={field.suggestedValue || `Enter ${field.name}`}
+                    />
+                  </div>
                 )}
               </div>
             ))}
