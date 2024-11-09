@@ -10,11 +10,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body>
         <NextUIProvider>
-
-          <main className="min-h-screen bg-background text-foreground">
-            {children}
-          </main>
-
+          {children}
         </NextUIProvider>
       </body>
     </html>

@@ -8,6 +8,7 @@ import { auth } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
 import { Spinner } from '@nextui-org/react';
+import Profile from './profile/page';
 
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -41,6 +42,7 @@ export default function Home() {
         <div className='relative h-full min-h-dvh dark'>
           <StyledNavBar />
           <Dashboard />
+          {/* <Profile/> */}
         </div>
       ) : (
         <LoginPage onLogin={handleLogin} />

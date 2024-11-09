@@ -1,5 +1,3 @@
-// src/app/services/authService.tsx
-
 import { User, UserCredential, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db, storage } from "../firebase";

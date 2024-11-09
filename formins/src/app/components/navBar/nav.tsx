@@ -1,18 +1,20 @@
 "use client"
 
 import React from "react";
-import { Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenuToggle, NavbarMenu, NavbarMenuItem, Link, Button } from "@nextui-org/react";
+import { Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenuToggle, NavbarMenu, NavbarMenuItem, Link as NextUILink, Button } from "@nextui-org/react";
 import { handleSignOut } from "@/app/services/authService";
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 
 export default function StyledNavBar() {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   const menuItems = [
-    "Profile",
-    "Dashboard",
-    "Log Out",
+    { name: "Profile", href: "/profile" },
+    { name: "Dashboard", href: "/dashboard" },
+    // { name: "Log Out", href: "#", action: handleLogout }
   ];
 
   const handleLogout = async () => {
@@ -20,66 +22,66 @@ export default function StyledNavBar() {
     router.push('/');
   };
 
+  const isActive = (path: string) => pathname === path;
+
   return (
-    <Navbar onMenuOpenChange={setIsMenuOpen} className="dark">
+    <Navbar onMenuOpenChange={setIsMenuOpen} className="dark relative z-100">
       <NavbarContent>
         <NavbarMenuToggle
           aria-label={isMenuOpen ? "Close menu" : "Open menu"}
           className="sm:hidden"
         />
         <NavbarBrand>
-          <p className="font-bold text-inherit">FORMINS</p>
+          <Link href="/dashboard" className="font-bold text-inherit">
+            FORMINS
+          </Link>
         </NavbarBrand>
       </NavbarContent>
 
       <NavbarContent className="hidden sm:flex gap-4" justify="center">
-        <NavbarItem>
-          <Link color="foreground" href="#">
-            Features
+        <NavbarItem isActive={isActive('/profile')}>
+          <Link href="/profile" className={`${isActive('/profile') ? 'text-primary' : 'text-foreground'}`}>
+            Profile
           </Link>
         </NavbarItem>
-        <NavbarItem isActive>
-          <Link href="#" color="foreground" aria-current="page">
-            Customers
-          </Link>
-        </NavbarItem>
-        <NavbarItem>
-          <Link color="foreground" href="#">
-            Integrations
+        <NavbarItem isActive={isActive('/dashboard')}>
+          <Link href="/dashboard" className={`${isActive('/dashboard') ? 'text-primary' : 'text-foreground'}`}>
+            Dashboard
           </Link>
         </NavbarItem>
       </NavbarContent>
+
       <NavbarContent justify="end">
-        <NavbarItem className="hidden lg:flex">
-          <Link href="#">Login</Link>
-        </NavbarItem>
-        <NavbarItem>
-          <Button as={Link} className="text-white bg-gray-2">
-            Sign Up
-          </Button>
-        </NavbarItem>
         <NavbarItem>
           <Button onClick={handleLogout} color="danger">
             Log Out
           </Button>
         </NavbarItem>
       </NavbarContent>
-      <NavbarMenu>
+
+      {/* <NavbarMenu>
         {menuItems.map((item, index) => (
-          <NavbarMenuItem key={`${item}-${index}`}>
-            <Link
-              color={
-                index === 2 ? "primary" : index === menuItems.length - 1 ? "danger" : "foreground"
-              }
-              className="w-full"
-              href="#"
-              size="lg"
-            >
-              {item}
-            </Link>
+          <NavbarMenuItem key={`${item.name}-${index}`}>
+            {item.action ? (
+              <Button
+                onClick={item.action}
+                color={item.name === "Log Out" ? "danger" : "primary"}
+                className="w-full"
+                size="lg"
+              >
+                {item.name}
+              </Button>
+            ) : (
+              <Link
+                href={item.href}
+                className={`w-full text-lg ${isActive(item.href) ? 'text-primary' : 'text-foreground'}`}
+              >
+                {item.name}
+              </Link>
+            )}
           </NavbarMenuItem>
         ))}
-      </NavbarMenu>
+      </NavbarMenu> */}
     </Navbar>
   );
 }

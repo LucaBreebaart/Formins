@@ -1,6 +1,4 @@
-// app/dashboard/page.tsx
 import FormTemplate from "@/app/components/FormTemplate";
-import PDFUploadComponent from "@/app/components/PDFUpload";
 
 export default function Dashboard() {
   return (
@@ -11,7 +9,6 @@ export default function Dashboard() {
           Upload a PDF form to automatically detect fields and fill them out.
         </p>
         <FormTemplate />
-        {/* <PDFUploadComponent /> */}
       </div>
     </main>
   );

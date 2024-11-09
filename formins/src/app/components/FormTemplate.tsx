@@ -1,8 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button, Input, Card, Checkbox } from '@nextui-org/react';
 import SignaturePad from 'react-signature-canvas';
 import PDFPreview from './PDFPreview';
-import { FormField, SignatureCanvas } from '../types/form'
+import { FormField, SignatureCanvas } from '../types/form';
+import { auth } from "@/app/firebase";
+import { getUserProfile } from '../services/profileService';
+import { UserProfile } from '../types/user';
 
 export default function FormTemplate() {
   const [file, setFile] = useState<File | null>(null);
@@ -10,6 +13,28 @@ export default function FormTemplate() {
   const [loading, setLoading] = useState(false);
   const [values, setValues] = useState<Record<string, any>>({});
   const signatureRefs = useRef<{ [key: string]: SignatureCanvas }>({});
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        try {
+          const profile = await getUserProfile(user.uid);
+          setUserProfile(profile);
+        } catch (error) {
+          console.error("Error loading user profile:", error);
+        } finally {
+          setProfileLoading(false);
+        }
+      } else {
+        setProfileLoading(false);
+      }
+    };
+
+    loadUserProfile();
+  }, []);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -42,15 +67,50 @@ export default function FormTemplate() {
 
       setFields(processedFields);
 
-      // Initialize values with suggested values and false for checkboxes
+      // Initialise values with autofill data when available
       const initialValues: Record<string, any> = {};
       processedFields.forEach((field: FormField) => {
+        const fieldNameLower = field.name.toLowerCase();
+
+        // Handle checkboxes and signatures first
         if (field.isCheckbox) {
           initialValues[field.name] = false;
+        } else if (field.isSignature) {
+          initialValues[field.name] = '';
+        } else if (userProfile) {
+          // Autofill logic for text fields
+          if (fieldNameLower.includes('name') || fieldNameLower.includes('full name')) {
+            initialValues[field.name] = `${userProfile.firstName} ${userProfile.lastName}`;
+          } else if (fieldNameLower.includes('first name')) {
+            initialValues[field.name] = userProfile.firstName;
+          } else if (fieldNameLower.includes('last name') || fieldNameLower.includes('surname')) {
+            initialValues[field.name] = userProfile.lastName;
+          } else if (fieldNameLower.includes('email')) {
+            initialValues[field.name] = userProfile.email;
+          } else if (fieldNameLower.includes('phone')) {
+            initialValues[field.name] = userProfile.phoneNumber;
+          } else if (fieldNameLower.includes('address')) {
+            if (fieldNameLower.includes('street')) {
+              initialValues[field.name] = userProfile.address.street;
+            } else if (fieldNameLower.includes('city')) {
+              initialValues[field.name] = userProfile.address.city;
+            } else if (fieldNameLower.includes('state') || fieldNameLower.includes('province')) {
+              initialValues[field.name] = userProfile.address.state;
+            } else if (fieldNameLower.includes('zip') || fieldNameLower.includes('postal')) {
+              initialValues[field.name] = userProfile.address.zipCode;
+            } else if (fieldNameLower.includes('country')) {
+              initialValues[field.name] = userProfile.address.country;
+            } else {
+              initialValues[field.name] = `${userProfile.address.street}, ${userProfile.address.city}, ${userProfile.address.state} ${userProfile.address.zipCode}`;
+            }
+          } else {
+            initialValues[field.name] = field.suggestedValue || '';
+          }
         } else {
           initialValues[field.name] = field.suggestedValue || '';
         }
       });
+
       setValues(initialValues);
       setFile(file);
     } catch (error) {
@@ -102,6 +162,14 @@ export default function FormTemplate() {
       console.error('Error filling form:', error);
     }
   };
+
+  if (profileLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div>Loading ...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4">
