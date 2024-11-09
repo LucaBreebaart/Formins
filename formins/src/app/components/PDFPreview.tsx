@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, memo, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Card } from '@nextui-org/card';
 import { Button } from '@nextui-org/button';
@@ -30,15 +30,23 @@ interface PDFPreviewProps {
   onFieldClick?: (field: FormField) => void;
 }
 
-// Use memo to prevent unnecessary re-renders
-const PDFPreview: React.FC<PDFPreviewProps> = memo(({ file, fields, onFieldClick }) => {
+const PDFPreview = memo(({ file, fields, onFieldClick }: PDFPreviewProps) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [scale, setScale] = useState<number>(1);
   const [hoveredField, setHoveredField] = useState<string | null>(null);
   const [pageHeight, setPageHeight] = useState<number>(0);
-  
-  const fileUrl = file ? URL.createObjectURL(file) : null;
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
+  // Create and cleanup URL when file changes
+  useEffect(() => {
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPdfUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+    return undefined;
+  }, [file]);
 
   const onPageLoadSuccess = useCallback((page: any) => {
     setPageHeight(page.height);
@@ -54,46 +62,6 @@ const PDFPreview: React.FC<PDFPreviewProps> = memo(({ file, fields, onFieldClick
       height: field.bounds.height * scale,
     };
   }, [scale, pageHeight]);
-
-  // Memoize the field overlays to prevent unnecessary re-renders
-  const FieldOverlays = useCallback(() => {
-    return (
-      <>
-        {fields
-          .filter(field => field.page === currentPage && field.bounds)
-          .map((field, index) => {
-            const position = getFieldPosition(field);
-            if (!position) return null;
-
-            return (
-              <div
-                key={`${field.name}-${index}`}
-                className="absolute cursor-pointer transition-all duration-200"
-                style={{
-                  left: position.left,
-                  top: position.top,
-                  width: position.width,
-                  height: position.height,
-                  backgroundColor: field.isSignature ? 'rgba(255, 0, 0, 0.2)' : 
-                               field.isCheckbox ? 'rgba(0, 255, 0, 0.2)' : 
-                               'rgba(0, 0, 255, 0.2)',
-                  border: hoveredField === field.name ? '2px solid #000' : '1px solid rgba(0,0,0,0.2)',
-                }}
-                onClick={() => onFieldClick?.(field)}
-                onMouseEnter={() => setHoveredField(field.name)}
-                onMouseLeave={() => setHoveredField(null)}
-              >
-                {hoveredField === field.name && (
-                  <div className="absolute bottom-full left-0 bg-black text-white text-xs p-1 rounded mb-1 whitespace-nowrap z-10">
-                    {field.name}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-      </>
-    );
-  }, [fields, currentPage, getFieldPosition, hoveredField, onFieldClick]);
 
   return (
     <Card className="p-4 w-full max-w-4xl mx-auto">
@@ -137,22 +105,55 @@ const PDFPreview: React.FC<PDFPreviewProps> = memo(({ file, fields, onFieldClick
       </div>
 
       <div className="relative border rounded-lg overflow-auto">
-        <Document
-          file={fileUrl}
-          onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-          className="mx-auto"
-        >
-          <Page
-            pageNumber={currentPage}
-            scale={scale}
-            renderAnnotationLayer={false}
-            renderTextLayer={false}
-            onLoadSuccess={onPageLoadSuccess}
-            className="relative"
+        {pdfUrl && (
+          <Document
+            file={pdfUrl}
+            onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+            className="mx-auto"
           >
-            <FieldOverlays />
-          </Page>
-        </Document>
+            <Page
+              pageNumber={currentPage}
+              scale={scale}
+              renderAnnotationLayer={false}
+              renderTextLayer={false}
+              onLoadSuccess={onPageLoadSuccess}
+              className="relative"
+            >
+              {fields
+                .filter(field => field.page === currentPage && field.bounds)
+                .map((field, index) => {
+                  const position = getFieldPosition(field);
+                  if (!position) return null;
+
+                  return (
+                    <div
+                      key={`${field.name}-${index}`}
+                      className="absolute cursor-pointer transition-all duration-200"
+                      style={{
+                        left: position.left,
+                        top: position.top,
+                        width: position.width,
+                        height: position.height,
+                        backgroundColor: field.isSignature ? 'rgba(255, 0, 0, 0.2)' : 
+                                     field.isCheckbox ? 'rgba(0, 255, 0, 0.2)' : 
+                                     'rgba(0, 0, 255, 0.2)',
+                        border: hoveredField === field.name ? '2px solid #000' : '1px solid rgba(0,0,0,0.2)',
+                      }}
+                      onClick={() => onFieldClick?.(field)}
+                      onMouseEnter={() => setHoveredField(field.name)}
+                      onMouseLeave={() => setHoveredField(null)}
+                    >
+                      {hoveredField === field.name && (
+                        <div className="absolute bottom-full left-0 bg-black text-white text-xs p-1 rounded mb-1 whitespace-nowrap z-10">
+                          {field.name}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+            </Page>
+          </Document>
+        )}
       </div>
     </Card>
   );
