@@ -21,6 +21,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/services/authService.js", "src/app/services/bucketService.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/services/authService.js", "src/app/services/bucketService.js", "src/app/utils/pdfUtils.js"],
   "exclude": ["node_modules"]
 }

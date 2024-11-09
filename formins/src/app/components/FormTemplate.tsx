@@ -1,66 +1,58 @@
-import React, { useState } from 'react';
-import { Button, Input, Card } from '@nextui-org/react';
-import dynamic from 'next/dynamic';
-
-// Dynamically import PDFViewer
-const PDFViewer = dynamic(() => import('./PDFViewer'), {
-  ssr: false,
-  loading: () => (
-    <div className="flex justify-center items-center h-[600px]">
-      <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
-    </div>
-  )
-});
-
-interface FormField {
-  name: string;
-  type: string;
-  page: number;
-  required: boolean;
-  suggestedValue?: string;
-}
+import React, { useState, useRef } from 'react';
+import { Button, Input, Card, Checkbox } from '@nextui-org/react';
+import SignaturePad from 'react-signature-canvas';
+import PDFPreview from './PDFPreview';
+import { FormField, SignatureCanvas } from '../types/form'
 
 export default function FormTemplate() {
   const [file, setFile] = useState<File | null>(null);
   const [fields, setFields] = useState<FormField[]>([]);
   const [loading, setLoading] = useState(false);
-  const [values, setValues] = useState<Record<string, string>>({});
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [values, setValues] = useState<Record<string, any>>({});
+  const signatureRefs = useRef<{ [key: string]: SignatureCanvas }>({});
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     setLoading(true);
     const formData = new FormData();
-    formData.append('pdf', selectedFile);
+    formData.append('pdf', file);
 
     try {
-      // Clean up previous URL if it exists
-      if (pdfUrl) {
-        URL.revokeObjectURL(pdfUrl);
-      }
-
       const response = await fetch('/api/analyze-form', {
         method: 'POST',
         body: formData,
       });
       const data = await response.json();
-      
+
       if (!response.ok) throw new Error(data.error);
-      
-      setFields(data.formFields);
-      // Initialize values with suggested values
-      const initialValues: Record<string, string> = {};
-      data.formFields.forEach((field: FormField) => {
-        initialValues[field.name] = field.suggestedValue || '';
+
+      // Process fields to identify signatures and checkboxes
+      const processedFields = data.formFields.map((field: FormField) => ({
+        ...field,
+        isSignature: field.name.toLowerCase().includes('signature') ||
+          field.name.toLowerCase().includes('signiture') ||
+          field.name.toLowerCase().includes('sign'),
+        isCheckbox: field.type === 'PDFCheckBox' ||
+          field.name.toLowerCase().includes('confirm') ||
+          field.name.toLowerCase().includes('accept') ||
+          field.name.toLowerCase().includes('understand')
+      }));
+
+      setFields(processedFields);
+
+      // Initialize values with suggested values and false for checkboxes
+      const initialValues: Record<string, any> = {};
+      processedFields.forEach((field: FormField) => {
+        if (field.isCheckbox) {
+          initialValues[field.name] = false;
+        } else {
+          initialValues[field.name] = field.suggestedValue || '';
+        }
       });
       setValues(initialValues);
-      setFile(selectedFile);
-      
-      // Create URL for PDF preview
-      const fileUrl = URL.createObjectURL(selectedFile);
-      setPdfUrl(fileUrl);
+      setFile(file);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -68,37 +60,25 @@ export default function FormTemplate() {
     }
   };
 
-  const handleUpdatePreview = async () => {
+  const handleFillForm = async () => {
     if (!file) return;
-    
-    const formData = new FormData();
-    formData.append('pdf', file);
-    formData.append('values', JSON.stringify(values));
 
-    try {
-      const response = await fetch('/api/fill-form', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const blob = await response.blob();
-      // Clean up previous URL if it exists
-      if (pdfUrl) {
-        URL.revokeObjectURL(pdfUrl);
+    // Convert signatures to values and prepare checkbox values
+    const formValues = { ...values };
+    fields.forEach(field => {
+      if (field.isSignature && signatureRefs.current[field.name]) {
+        const signatureCanvas = signatureRefs.current[field.name];
+        if (!signatureCanvas.isEmpty()) {
+          formValues[field.name] = signatureCanvas.toDataURL('image/png', {
+            includeBackgroundColor: false,
+          });
+        }
       }
-      const url = URL.createObjectURL(blob);
-      setPdfUrl(url);
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
+    });
 
-  const handleDownload = async () => {
-    if (!file) return;
-    
     const formData = new FormData();
     formData.append('pdf', file);
-    formData.append('values', JSON.stringify(values));
+    formData.append('values', JSON.stringify(formValues));
 
     try {
       const response = await fetch('/api/fill-form', {
@@ -106,82 +86,130 @@ export default function FormTemplate() {
         body: formData,
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || 'Failed to fill form');
+      }
+
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      
       const a = document.createElement('a');
       a.href = url;
       a.download = 'filled-form.pdf';
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error filling form:', error);
     }
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="mb-4">
-        <Input
-          type="file"
-          accept=".pdf"
-          onChange={handleFileChange}
-          className="w-full"
-        />
-      </div>
+    <div className="p-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="p-6">
+          <input
+            type="file"
+            onChange={handleFileChange}
+            accept=".pdf"
+            className="mb-4"
+          />
 
-      {loading && (
-        <div className="text-center p-4">
-          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
-          <p className="mt-2">Analyzing form...</p>
-        </div>
-      )}
+          {loading && <p>Analyzing form...</p>}
 
-      {fields.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Form Fields Section */}
-          <Card className="p-4">
-            <h2 className="text-xl font-bold mb-4">Form Fields</h2>
+          {fields.length > 0 && (
             <div className="space-y-4">
               {fields.map((field) => (
-                <div key={field.name} className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    {field.name} {field.required && '*'}
-                  </label>
-                  <Input
-                    value={values[field.name] || ''}
-                    onChange={(e) =>
-                      setValues({...values, [field.name]: e.target.value})
-                    }
-                    placeholder={field.suggestedValue || `Enter ${field.name}`}
-                    className="w-full"
-                  />
+                <div key={field.name} className="space-y-2" id={field.name}>
+                  {field.isCheckbox ? (
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={field.name}
+                        isSelected={values[field.name] || false}
+                        onValueChange={(checked) =>
+                          setValues({
+                            ...values,
+                            [field.name]: checked
+                          })
+                        }
+                      />
+                      <label
+                        htmlFor={field.name}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        {field.label || field.name}
+                      </label>
+                    </div>
+                  ) : field.isSignature ? (
+                    <div className="border rounded p-2 bg-white">
+                      <label className="block text-sm font-medium mb-2">
+                        {field.name} {field.required && '*'}
+                      </label>
+                      <SignaturePad
+                        ref={(ref) => {
+                          if (ref) {
+                            signatureRefs.current[field.name] = ref;
+                          }
+                        }}
+                        canvasProps={{
+                          className: 'signature-canvas',
+                          width: 500,
+                          height: 200,
+                          style: {
+                            width: '100%',
+                            height: '200px',
+                            maxWidth: '500px',
+                            backgroundColor: '#fff',
+                            border: '1px solid #e2e8f0',
+                          }
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => signatureRefs.current[field.name]?.clear()}
+                        className="mt-2"
+                      >
+                        Clear Signature
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-sm font-medium">
+                        {field.name} {field.required && '*'}
+                      </label>
+                      <Input
+                        value={values[field.name] || ''}
+                        onChange={(e) =>
+                          setValues({ ...values, [field.name]: e.target.value })
+                        }
+                        placeholder={field.suggestedValue || `Enter ${field.name}`}
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
-              <Button 
-                color="primary"
-                onClick={handleUpdatePreview}
-                className="w-full mt-4"
-              >
-                Update Preview
+
+              <Button onClick={handleFillForm} className="mt-4">
+                Fill and Download PDF
               </Button>
             </div>
-          </Card>
+          )}
+        </Card>
 
-          {/* PDF Preview Section */}
-          <PDFViewer pdfUrl={pdfUrl} />
-        </div>
-      )}
-
-      {fields.length > 0 && (
-        <Button 
-          color="success"
-          onClick={handleDownload}
-          className="mt-4 w-full"
-        >
-          Download Filled PDF
-        </Button>
-      )}
+        {file && (
+          <PDFPreview
+            file={file}
+            fields={fields}
+            onFieldClick={(field) => {
+              const element = document.getElementById(field.name);
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+                const input = element.querySelector('input');
+                if (input) input.focus();
+              }
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 }

@@ -25,3 +25,30 @@ body {
     text-wrap: balance;
   }
 }
+
+.pdf-preview {
+  background-color: #f5f5f5;
+  padding: 2rem;
+}
+
+.pdf-page {
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pdf-page canvas {
+  display: block;
+  margin: 0 auto;
+}
+
+.field-highlight {
+  transition: background-color 0.2s ease-in-out;
+}
+
+.field-highlight:hover {
+  background-color: rgba(100, 100, 255, 0.3) !important;
+}
+
+.field-highlight:hover .field-tooltip {
+  visibility: visible !important;
+}
