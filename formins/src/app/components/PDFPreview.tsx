@@ -2,7 +2,7 @@ import React, { useState, useCallback, memo, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Card } from '@nextui-org/card';
 import { Button } from '@nextui-org/button';
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 
@@ -33,7 +33,6 @@ interface PDFPreviewProps {
 const PDFPreview = memo(({ file, fields, onFieldClick }: PDFPreviewProps) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [scale, setScale] = useState<number>(1);
   const [hoveredField, setHoveredField] = useState<string | null>(null);
   const [pageHeight, setPageHeight] = useState<number>(0);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -56,12 +55,12 @@ const PDFPreview = memo(({ file, fields, onFieldClick }: PDFPreviewProps) => {
     if (!field.bounds || !pageHeight) return null;
     
     return {
-      left: field.bounds.x * scale,
-      top: (pageHeight - field.bounds.y - field.bounds.height) * scale,
-      width: field.bounds.width * scale,
-      height: field.bounds.height * scale,
+      left: field.bounds.x,
+      top: pageHeight - field.bounds.y - field.bounds.height,
+      width: field.bounds.width,
+      height: field.bounds.height
     };
-  }, [scale, pageHeight]);
+  }, [pageHeight]);
 
   return (
     <Card className="p-4 w-full max-w-4xl mx-auto">
@@ -85,23 +84,6 @@ const PDFPreview = memo(({ file, fields, onFieldClick }: PDFPreviewProps) => {
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="bordered"
-            onClick={() => setScale(prevScale => Math.max(prevScale - 0.2, 0.6))}
-            disabled={scale <= 0.6}
-          >
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <span className="text-sm">{Math.round(scale * 100)}%</span>
-          <Button
-            variant="bordered"
-            onClick={() => setScale(prevScale => Math.min(prevScale + 0.2, 2))}
-            disabled={scale >= 2}
-          >
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-        </div>
       </div>
 
       <div className="relative border rounded-lg overflow-auto">
@@ -113,7 +95,7 @@ const PDFPreview = memo(({ file, fields, onFieldClick }: PDFPreviewProps) => {
           >
             <Page
               pageNumber={currentPage}
-              scale={scale}
+              scale={1}
               renderAnnotationLayer={false}
               renderTextLayer={false}
               onLoadSuccess={onPageLoadSuccess}
@@ -134,9 +116,9 @@ const PDFPreview = memo(({ file, fields, onFieldClick }: PDFPreviewProps) => {
                         top: position.top,
                         width: position.width,
                         height: position.height,
-                        backgroundColor: field.isSignature ? 'rgba(255, 0, 0, 0.2)' : 
-                                     field.isCheckbox ? 'rgba(0, 255, 0, 0.2)' : 
-                                     'rgba(0, 0, 255, 0.2)',
+                        backgroundColor: field.isSignature ? 'rgba(255, 0, 0, 0.2)' :
+                          field.isCheckbox ? 'rgba(0, 255, 0, 0.2)' :
+                            'rgba(0, 0, 255, 0.2)',
                         border: hoveredField === field.name ? '2px solid #000' : '1px solid rgba(0,0,0,0.2)',
                       }}
                       onClick={() => onFieldClick?.(field)}
