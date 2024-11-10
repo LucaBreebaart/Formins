@@ -1,20 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PDFDocument, rgb } from 'pdf-lib';
 
-function dataURLtoUint8Array(dataURL: string): Uint8Array {
-  try {
-    const base64 = dataURL.split(',')[1];
-    if (!base64) {
-      throw new Error('Invalid data URL format');
-    }
-    const buffer = Buffer.from(base64, 'base64');
-    return new Uint8Array(buffer);
-  } catch (error) {
-    console.error('Error converting dataURL to Uint8Array:', error);
-    throw error;
-  }
-}
-
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
@@ -31,64 +17,55 @@ export async function POST(request: Request) {
     const pdfBytes = await pdfFile.arrayBuffer();
     const pdfDoc = await PDFDocument.load(pdfBytes);
     const form = pdfDoc.getForm();
-    const pages = pdfDoc.getPages();
-    
+
+    // Debug: log all available fields
+    console.log('Available fields:', form.getFields().map(f => f.getName()));
+    console.log('Values to fill:', values);
+
     // Fill each field
     for (const [fieldName, value] of Object.entries(values)) {
       try {
+        if (value === null || value === undefined || value === '') continue;
+
         const field = form.getField(fieldName);
-        
         if (!field) {
           console.warn(`Field not found: ${fieldName}`);
           continue;
         }
 
         if (typeof value === 'string' && value.startsWith('data:image/png;base64,')) {
-          // Handle signature field
-          const signatureBytes = dataURLtoUint8Array(value);
+          // Handle signature
+          const base64Data = value.split(',')[1];
+          const signatureBytes = Buffer.from(base64Data, 'base64');
           const signatureImage = await pdfDoc.embedPng(signatureBytes);
-          const widgets = field.acroField.getWidgets();
+          
+          const signatureField = field;
+          const widgets = signatureField.acroField.getWidgets();
           
           for (const widget of widgets) {
-            const pageRef = widget.P();
-            let pageNum = pages.findIndex(page => page.ref === pageRef);
-            if (pageNum === -1) continue;
-
-            const page = pages[pageNum];
             const { x, y, width, height } = widget.getRectangle();
-            const signatureAspectRatio = signatureImage.width / signatureImage.height;
-            let signatureWidth = width;
-            let signatureHeight = height;
-
-            if (width / height > signatureAspectRatio) {
-              signatureWidth = height * signatureAspectRatio;
-            } else {
-              signatureHeight = width / signatureAspectRatio;
-            }
-
-            const xOffset = (width - signatureWidth) / 2;
-            const yOffset = (height - signatureHeight) / 2;
-
+            const page = pdfDoc.getPages()[0]; // Assuming first page
+            
+            // Draw signature
             page.drawImage(signatureImage, {
-              x: x + xOffset,
-              y: y + yOffset,
-              width: signatureWidth,
-              height: signatureHeight
+              x,
+              y,
+              width,
+              height,
+              opacity: 0.9
             });
           }
+          
+          // Remove the original field
           form.removeField(field);
-        } else if (field.constructor.name === 'PDFCheckBox') {
-          // Handle checkbox field
+        } else if (typeof value === 'boolean') {
+          // Handle checkbox
           const checkbox = form.getCheckBox(fieldName);
-          if (value === true) {
-            checkbox.check();
-          } else {
-            checkbox.uncheck();
-          }
-        } else if (field.constructor.name === 'PDFTextField') {
-          // Handle regular text field
+          value ? checkbox.check() : checkbox.uncheck();
+        } else {
+          // Handle text field
           const textField = form.getTextField(fieldName);
-          await textField.setText(value as string);
+          textField.setText(value.toString());
         }
       } catch (error) {
         console.error(`Error filling field ${fieldName}:`, error);

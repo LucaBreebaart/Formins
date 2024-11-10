@@ -8,12 +8,14 @@ import { getUserProfile } from '../services/profileService';
 import { UserProfile } from '../types/user';
 
 export default function FormTemplate() {
-  const [file, setFile] = useState<File | null>(null);
+  const [modifiedPdfBase64, setModifiedPdfBase64] = useState<string | null>(null);
   const [fields, setFields] = useState<FormField[]>([]);
   const [loading, setLoading] = useState(false);
   const [values, setValues] = useState<Record<string, any>>({});
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const signatureRefs = useRef<{ [key: string]: SignatureCanvas }>({});
+
+  const [file, setFile] = useState<File | null>(null);
 
   const loadUserProfile = async () => {
     const user = auth.currentUser;
@@ -33,7 +35,7 @@ export default function FormTemplate() {
 
   const processFieldsWithAutofill = (fields: FormField[], userProfile: UserProfile | null) => {
     const initialValues: Record<string, any> = {};
-    
+
     fields.forEach((field: FormField) => {
       const fieldNameLower = field.name.toLowerCase();
 
@@ -68,7 +70,7 @@ export default function FormTemplate() {
           }
         }
       }
-      
+
       if (!initialValues[field.name]) {
         initialValues[field.name] = field.suggestedValue || '';
       }
@@ -94,22 +96,13 @@ export default function FormTemplate() {
 
       if (!response.ok) throw new Error(data.error);
 
-      const processedFields = data.formFields.map((field: FormField) => ({
-        ...field,
-        isSignature: field.name.toLowerCase().includes('signature') ||
-          field.name.toLowerCase().includes('signiture') ||
-          field.name.toLowerCase().includes('sign'),
-        isCheckbox: field.type === 'PDFCheckBox' ||
-          field.name.toLowerCase().includes('confirm') ||
-          field.name.toLowerCase().includes('accept') ||
-          field.name.toLowerCase().includes('understand')
-      }));
-
-      setFields(processedFields);
-
-      const initialValues = processFieldsWithAutofill(processedFields, userProfile);
-      setValues(initialValues);
+      // Store the modified PDF
+      setModifiedPdfBase64(data.modifiedPdf);
+      setFields(data.formFields);
       setFile(file);
+
+      const initialValues = processFieldsWithAutofill(data.formFields, userProfile);
+      setValues(initialValues);
 
     } catch (error) {
       console.error('Error:', error);
@@ -119,33 +112,39 @@ export default function FormTemplate() {
   };
 
   const handleFillForm = async () => {
-    if (!file) return;
+    if (!modifiedPdfBase64) return;
 
-    const formValues = { ...values };
-    fields.forEach(field => {
-      if (field.isSignature && signatureRefs.current[field.name]) {
-        const signatureCanvas = signatureRefs.current[field.name];
-        if (!signatureCanvas.isEmpty()) {
-          formValues[field.name] = signatureCanvas.toDataURL('image/png', {
-            includeBackgroundColor: false,
-          });
-        }
-      }
-    });
-
-    const formData = new FormData();
-    formData.append('pdf', file);
-    formData.append('values', JSON.stringify(formValues));
-
+    setLoading(true);
     try {
+      // Convert base64 back to File
+      const pdfBlob = await fetch(`data:application/pdf;base64,${modifiedPdfBase64}`).then(res => res.blob());
+      const modifiedPdfFile = new File([pdfBlob], 'form-with-fields.pdf', { type: 'application/pdf' });
+
+      // Collect form values including signatures
+      const formValues = { ...values };
+      fields.forEach(field => {
+        if (field.isSignature && signatureRefs.current[field.name]) {
+          const signatureCanvas = signatureRefs.current[field.name];
+          if (!signatureCanvas.isEmpty()) {
+            formValues[field.name] = signatureCanvas.toDataURL('image/png');
+          }
+        }
+      });
+
+      // Create form data with modified PDF
+      const formData = new FormData();
+      formData.append('pdf', modifiedPdfFile);
+      formData.append('values', JSON.stringify(formValues));
+
+      console.log('Sending values:', formValues);
+
       const response = await fetch('/api/fill-form', {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.details || 'Failed to fill form');
+        throw new Error('Failed to fill form');
       }
 
       const blob = await response.blob();
@@ -153,10 +152,15 @@ export default function FormTemplate() {
       const a = document.createElement('a');
       a.href = url;
       a.download = 'filled-form.pdf';
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
+
     } catch (error) {
       console.error('Error filling form:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
