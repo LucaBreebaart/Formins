@@ -4,10 +4,12 @@ import React, { useState } from "react";
 import { Button, Input, Card, CardBody, CardHeader, Link } from "@nextui-org/react";
 import { useRouter } from 'next/navigation';
 import { handleRegister, handlelogin } from "@/app/services/authService";
-import { EyeFilledIcon } from "../../images/icons/EyeFilledIcon";
-import { EyeSlashFilledIcon } from "../../images/icons/EyeSlashFilledIcon";
+import { EyeFilledIcon } from "../../../../public/icons/EyeFilledIcon";
+import { EyeSlashFilledIcon } from "../../../../public/icons/EyeSlashFilledIcon";
 
-const AuthPage = () => {  
+import { BackgroundLines } from "@/components/ui/background-lines";
+
+const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,7 +40,7 @@ const AuthPage = () => {
         // Login
         await handlelogin(email, password);
         // setMessage("Login successful!");
-        router.push('/'); 
+        router.push('/');
       } else {
         const success = await handleRegister({
           username,
@@ -59,7 +61,7 @@ const AuthPage = () => {
   };
 
   return (
-    <main className="flex justify-center items-center w-full min-h-dvh dark bg-primary">
+    <BackgroundLines className="flex items-center justify-center w-full flex-col px-4">
       <Card className="flex justify-center w-full max-w-sm h-fit">
         <CardHeader className="flex justify-center ">
           <h2 className="text-2xl font-bold">{isLogin ? "Login" : "Register"}</h2>
@@ -149,7 +151,7 @@ const AuthPage = () => {
           </div>
         </CardBody>
       </Card>
-    </main>
+    </BackgroundLines>
   );
 }
 

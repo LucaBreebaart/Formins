@@ -1,35 +1,33 @@
 <br />
 
-![GitHub repo size](https://img.shields.io/github/repo-size/LucaBreebaart/lycra?color=%23000000)
-![GitHub watchers](https://img.shields.io/github/watchers/LucaBreebaart/lycra?color=%23000000)
-![GitHub language count](https://img.shields.io/github/languages/count/LucaBreebaart/lycra?color=%23000000)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/LucaBreebaart/lycra?color=%23000000)
+![GitHub repo size](https://img.shields.io/github/repo-size/LucaBreebaart/formins?color=%23000000)
+![GitHub watchers](https://img.shields.io/github/watchers/LucaBreebaart/formins?color=%23000000)
+![GitHub language count](https://img.shields.io/github/languages/count/LucaBreebaart/formins?color=%23000000)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/LucaBreebaart/formins?color=%23000000)
 
 <!-- HEADER SECTION -->
-<h6 align="center">Luca Breebaart Interactive Development 302</h6>
+<h6 align="center">Luca Breebaart - PDF Form Automation</h6>
 <p align="center">
 </br>
 
 <p align="center">
-
-  <a href="https://github.com/LucaBreebaart/lycra" >
-    <img  src="readmeAssets/logo.png" alt="Logo" width="140" height="140">
+  <a href="https://github.com/LucaBreebaart/formins">
+    <img src="readmeAssets/logo.SVG" alt="Logo" width="140" height="140">
   </a>
   
   <h3 align="center">FORMINS</h3>
 
   <p align="center">
-    Short Project Slogan / Description <br>
-      <a href="https://github.com/LucaBreebaart/lycra"><strong>Explore the docs »</strong></a>
+    Intelligent PDF Form Processing Made Simple<br>
+    <a href="https://github.com/LucaBreebaart/formins"><strong>Explore the docs »</strong></a>
    <br />
    <br />
-   <a href="">View Demo</a>
+   <a href="your-demo-link">View Demo</a>
     ·
-    <a href="">Report Bug</a>
+    <a href="your-issues-link">Report Bug</a>
     ·
-    <!-- <a href="">Request Feature</a> -->
+    <a href="your-issues-link">Request Feature</a>
 </p>
-<!-- TABLE OF CONTENTS -->
 
 ## Table of Contents
 
@@ -40,236 +38,308 @@
   - [Prerequisites](#prerequisites)
   - [How to install](#how-to-install)
 - [Features and Functionality](#features-and-functionality)
-- [Concept Process](#concept-process)
-  - [Ideation](#ideation)
-  - [Wireframes](#wireframes)
 - [Development Process](#development-process)
   - [Implementation Process](#implementation-process)
-    - [Highlights](#highlights)
-  - [Future Implementation](#peer-reviews)
-- [Final Outcome](#final-outcome)
-  - [Mockups](#mockups)
-  - [Video Demonstration](#video-demonstration)
-- [Roadmap](#roadmap)
+  - [Future Implementation](#future-implementation)
 - [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
 
-<!--PROJECT DESCRIPTION-->
-
 ## About the Project
 
-<!-- header image of project -->
 
-<img src="readmeAssets/thumbnail.png">
 
 ### Project Description
 
-This project manages golf tournaments and enables competition participation via a mobile app. Users can enter tournaments, view golf course details, and use a digital scorecard. The app features a leaderboard to track progress as well as a list of participants. Developed with Visual Studio and Expo using React Native, it ensures consistent performance on iOS and Android. The goal is to provide a practical platform for golf enthusiasts and organisers, promoting engagement and community involvement in golfing activities.
+FORMINS is a web application that automates the process of filling out PDF forms. By leveraging Google Document AI, it analyses uploaded PDF forms, detects input fields, and creates a fillable form template. Users can then easily fill out the form fields, including text inputs, checkboxes, and signatures. The application also supports auto-filling based on user profile information. Once completed, users can download the filled PDF form. This project aims to streamline the form-filling process and enhance productivity.
 
 ### Built With
-* [Visual Studio](https://visualstudio.microsoft.com/)
-* [GitHub](https://github.com/)
-
+* [Next.js 14](https://nextjs.org/)
+* [React](https://reactjs.org/)
+* [Google Document AI](https://cloud.google.com/document-ai)
+* [Firebase Authentication](https://firebase.google.com/)
+* [pdf-lib](https://pdf-lib.js.org/)
+* [Tailwind CSS](https://tailwindcss.com/)
+* [NextUI](https://nextui.org/)
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
-
 ### Prerequisites
 
-For development, the latest version of Visual Studio is required. The latest version can be downloaded from [Visual Studio](https://visualstudio.microsoft.com/)
+- Node.js 18+
+- Google Cloud Platform account
+- Firebase project
+- Git
 
 ### Installation
 
-1. Clone the repo using GitHub Desktop
-    - Download and install [GitHub Desktop](https://desktop.github.com/)
-    - Open GitHub Desktop and click on `File` > `Clone repository`
-    - Enter the repository URL: `https://github.com/LucaBreebaart/lycra`
-    - Choose the local path where you want to clone the repository and click `Clone`
+1. Clone the repository
+```bash
+git clone https://github.com/LucaBreebaart/formins.git
+cd formins
+```
 
-2. Open the project in Visual Studio
-    - Open Visual Studio
-    - Click on `File` > `Open`
+2. Install dependencies
+```bash
+npm install
+```
 
-3. Crate .env with your firebase config
+3. Configure Google Cloud Platform
+```bash
+# Visit Google Cloud Console
+# Create new project or select existing
+# Enable Document AI API
+# Create Form Parser processor
+# Download service account key
+```
 
-    ```sh 
-   FIREBASE_API_KEY=
-   FIREBASE_AUTH_DOMAIN=
-   FIREBASE_PROJECT_ID=
-   FIREBASE_STORAGE_BUCKET=
-   FIREBASE_MESSAGING_SENDER_ID=
-   FIREBASE_APP_ID=
-    ```
+4. Set up Firebase
+```bash
+# Create Firebase project
+# Enable Authentication
+# Create web app
+# Copy config details
+```
 
-4. Install packages
+5. Configure environment variables
+Create `.env.local`:
+```bash
+NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
 
-    ```sh
-    npm install
-    ```
+GOOGLE_CLOUD_CLIENT_EMAIL=your-client-email
+GOOGLE_CLOUD_PRIVATE_KEY=your-private-key
+GOOGLE_CLOUD_PROJECT_ID=your-project-id
+GOOGLE_CLOUD_FORM_PARSER_PROCESSOR_ID=your-processor-id
+```
 
-5. Run project
-
-    ```sh
-    npm start
-    ```
-
-6. Download Expo Go
-
-    Download Expo Go on Android or iOS:
-    - [iOS](https://apps.apple.com/us/app/expo-go/id982107779)
-    - [Android](https://play.google.com/store/apps/details?id=host.exp.exponent&hl=en_ZA&gl=US)
-
+6. Run development server
+```bash
+npm run dev
+```
 
 ## Features and Functionality
 
-### Feature 1: Joining a Competition
+### Step 1: PDF Upload
 
-- **Joining**: Upon viewing and selecting a competition, users are directed to the competition details page.
-Here, they can join the competition if they haven't already.
+The user uploads a PDF form through the application's user interface. The PDF file is sent to the server for further processing.
 
-<br>
+```jsx
+<input
+ type="file"
+ onChange={handleFileChange}
+ accept=".pdf"
+/>
+```
 
-![image2][image2]
+### Step 2: PDF Analysis with AI
 
-### Feature 2: Entering Scores
+The server receives the uploaded PDF and uses Google Document AI to analyse the document and detect form fields.
 
-- **Entering Scores**: Once joined, users can navigate through the golf course virtually within the app.
-They can enter their score for each hole played.
-After entering scores for all holes, users proceed to the complettion page where they can confirm and enter their scores.
-- **Viewing Scores**:
-After entering scores, users are directed to the live leaderboard section.
-Here, they can see the progress of all participants in real-time.
-The leaderboard updates dynamically as scores are entered by other players.
+```typescript
+// API route handler for form analysis
+export async function POST(request: Request) {
+  const formData = await request.formData();
+  const file = formData.get('pdf') as File;
 
-<br>
+  const pdfBuffer = await file.arrayBuffer();
 
-![image3][image3]
+  // Process the PDF with Document AI
+  const [result] = await client.processDocument({
+    name: `projects/${projectId}/locations/us/processors/${processorId}`,
+    rawDocument: {
+      content: Buffer.from(pdfBuffer),
+      mimeType: 'application/pdf',
+    },
+  });
 
-### Feature 3: Create and Manage Competitions
+  // Extract form fields from the analysis result
+  const formFields: FormField[] = [];
+  result.document.pages.forEach((page) => {
+    page.formFields.forEach((field) => {
+      formFields.push({
+        name: field.fieldName,
+        type: field.fieldType,
+        page: page.pageNumber,
+        bounds: field.boundingPoly.normalizedVertices,
+      });
+    });
+  });
 
-- **Create New Competition**: Easily create new competitions by providing necessary details such as name, date, and other relevant information.
-- **Add Holes to Competitions**: Add individual holes to each competition, specifying details like hole number, par, images and distance.
+  // Return the extracted form fields
+  return NextResponse.json({ formFields });
+}
+```
 
-<br>
+### Step 3: Form Field Creation
 
-![image4][image4]
+Based on the detected form fields from the AI analysis, the application creates a fillable form template. Each form field is represented by a corresponding input element in the user interface.
 
-## Concept Process
+```typescript
+{fields.map((field) => (
+  <div key={field.name}>
+    {field.type === 'text' && (
+      <Input
+        label={field.name}
+        value={values[field.name] || ''}
+        onChange={(e) => setValues({ ...values, [field.name]: e.target.value })}
+      />
+    )}
+    {field.type === 'checkbox' && (
+      <Checkbox
+        label={field.name}
+        checked={values[field.name] || false}
+        onChange={(checked) => setValues({ ...values, [field.name]: checked })}
+      />
+    )}
+    {field.type === 'signature' && (
+      <SignaturePad
+        ref={(ref) => (signatureRefs.current[field.name] = ref)}
+        options={{ penColor: 'blue' }}
+      />
+    )}
+  </div>
+))}
+```
 
-The `Conceptual Process` is the set of actions, activities and research that was done when starting this project.
+### Step 4: Auto-Fill with User Profile
 
-### Ideation and Moodboard
+If the user is logged in, the application automatically fills form fields based on their profile information.
 
-![image5][image5]
+```typescript
+const processFieldsWithAutofill = (fields: FormField[], userProfile: UserProfile | null) => {
+  const initialValues: Record<string, any> = {};
 
-### Wireframes
+  fields.forEach((field) => {
+    const fieldNameLower = field.name.toLowerCase();
 
-![image6][image6]
+    if (userProfile) {
+      if (fieldNameLower.includes('email')) {
+        initialValues[field.name] = userProfile.email;
+      } else if (fieldNameLower.includes('name')) {
+        initialValues[field.name] = `${userProfile.firstName} ${userProfile.lastName}`;
+      } else if (fieldNameLower.includes('address')) {
+        initialValues[field.name] = userProfile.address.street;
+      }
+      // Additional field mappings...
+    }
 
-<!-- DEVELOPMENT PROCESS -->
+    if (!initialValues[field.name]) {
+      initialValues[field.name] = field.suggestedValue || '';
+    }
+  });
+
+  return initialValues;
+};
+```
+
+### Step 5: Form Filling and Signature Capture
+
+The user fills out the form fields and provides their signature using the signature pad component. The signature is captured as an image.
+
+```
+<Button onClick={handleFillForm}>Fill and Download PDF</Button>
+```
+
+### Step 6: PDF Generation
+
+Upon form submission, the server generates a filled PDF document using the user-provided form data and the captured signature images.
+
+```typescript
+// API route handler for form filling
+export async function POST(request: Request) {
+  const formData = await request.formData();
+  const pdfFile = formData.get('pdf') as File;
+  const formValues = JSON.parse(formData.get('values') as string);
+
+  const pdfDoc = await PDFDocument.load(await pdfFile.arrayBuffer());
+
+  // Fill form fields with user-provided values
+  const form = pdfDoc.getForm();
+  Object.entries(formValues).forEach(([fieldName, fieldValue]) => {
+    const field = form.getField(fieldName);
+    if (field instanceof PDFTextField) {
+      field.setText(fieldValue);
+    } else if (field instanceof PDFCheckBox) {
+      field.check();
+    } else if (field instanceof PDFSignature) {
+      const signatureImage = await pdfDoc.embedPng(fieldValue);
+      field.setImage(signatureImage);
+    }
+  });
+
+  // Save the filled PDF
+  const pdfBytes = await pdfDoc.save();
+  const pdfBuffer = Buffer.from(pdfBytes);
+
+  // Return the filled PDF
+  return new Response(pdfBuffer, {
+    headers: {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'attachment; filename="filled-form.pdf"',
+    },
+  });
+}
+```
+
+### Step 7: PDF Download
+
+The filled PDF is sent back to the client, and the user can download the completed form.
+
+```typescript
+const response = await fetch('/api/fill-form', {
+  method: 'POST',
+  body: formData,
+});
+
+const blob = await response.blob();
+const url = URL.createObjectURL(blob);
+
+// Trigger download of the filled PDF
+const a = document.createElement('a');
+a.href = url;
+a.download = 'filled-form.pdf';
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+URL.revokeObjectURL(url);
+```
+
 ## Development Process
 
-The `Development Process` is the technical implementations and functionality done in the frontend and backend of the application.
-
 ### Implementation Process
-<!-- stipulate all of the functionality you included in the project -->
-
-* Developed `authentication` for user login and registration.
-* Created `scorecard` feature to track and input golf scores.
-* Implemented `competition creation` and `participation` functionality.
-* Designed `leaderboard` to display rankings in real-time.
-* Utilised `React Navigation` for seamless page transitions.
-* Employed `FlatList` for efficient rendering of score data.
-* Developed `profile management` allowing users to update their details.
-* Used `Expo` for running on both iOS and Android.
-
-#### Highlights
-<!-- stipulated the highlight you experienced with the project -->
-* Relationships through the database, and calculating final scores.
-* Using Firebase for authentication and data storage.
-
-#### Bugs
-<!-- stipulated the challenges you faced with the project and why you think you faced it or how you think you'll solve it (if not solved) -->
-* Sign up page sometimes crashes
-* Play competition page sometimes doesnt refresh
+* Integrated Google Document AI for form analysis
+* Built dynamic form field detection system
+* Created interactive PDF preview with field highlighting
+* Implemented signature capture and embedding
+* Developed user profile-based auto-fill
+* Added authentication and user management
 
 ### Future Implementation
-<!-- stipulate functionality and improvements that can be implemented in the future. -->
+* Fully funtional on all input fields
+* Optimised user data placement
+* Cloud storage integration
+* Advanced field validation
+* Mobile optimisation(Edit on the actual PDF)
 
-* Update the user profile page to show their current entered competitions
-* View user profiles and entered competitions
-* Serach funtionality
-* Can only play competitions on the selected date
-* Add more user info, such as a calculated handicap
 
-<!-- MOCKUPS -->
-## Final Outcome
-
-### Mockups
-
-![image10][image10]
-
-<!-- VIDEO DEMONSTRATION -->
-### Video Demonstration
-
-To see a run through of the application, click below:
-
-[View Demonstration](https://www.youtube.com/watch?v=QHTPWY50kZY)
-
-<!-- ROADMAP -->
-## Roadmap
-
-See the [open issues](https://github.com/username/projectname/issues) for a list of proposed features (and known issues).
-
-<!-- CONTRIBUTING -->
 ## Contributing
 
-Contributions are what makes the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
 1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+2. Create Feature Branch (`git checkout -b feature/NewFeature`)
+3. Commit Changes (`git commit -m 'Add NewFeature'`)
+4. Push to Branch (`git push origin feature/NewFeature`)
+5. Open Pull Request
 
-<!-- AUTHORS -->
-## Authors
-
-* **Luca Breebaart** - [Luca Breebaart](https://github.com/LucaBreebaart)
-
-<!-- LICENSE -->
 ## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
-<!-- LICENSE -->
 ## Contact
 
-* **Luca Breebaart** - [luca.breebaart99@gmail.com](mailto:luca.breebaart99@gmail.com) - [@lucabreebaart](https://www.instagram.com/luca.breebaart/) 
-* **Project Link** - https://github.com/LucaBreebaart/Lycra 
-
-<!-- ACKNOWLEDGEMENTS -->
-
-
-<!-- MARKDOWN LINKS & IMAGES -->
-[image1]: /path/to/image.png
-[image2]: /readmeAssets/Join.jpg
-[image3]: /readmeAssets/scores.jpg
-[image4]: /readmeAssets/discover.jpg
-[image5]: /readmeAssets/moodboard.jpg
-[image6]: /readmeAssets/wireframes.jpg
-[image7]: /path/to/image.png
-[image8]: /path/to/image.png
-[image9]: /path/to/image.png
-[image10]: /readmeAssets/mockup.jpg
-
-
-<!-- Refer to https://shields.io/ for more information and options about the shield links at the top of the ReadMe file -->
-[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=flat-square&logo=linkedin&colorB=555
-[linkedin-url]: https://www.linkedin.com/in/nameonlinkedin/
-[instagram-shield]: https://img.shields.io/badge/-Instagram-black.svg?style=flat-square&logo=instagram&colorB=555
-[instagram-url]: https://www.instagram.com/instagram_handle/
-[behance-shield]: https://img.shields.io/badge/-Behance-black.svg?style=flat-square&logo=behance&colorB=555
-[behance-url]: https://www.behance.net/name-on-behance/
+Luca Breebaart - [luca.breebaart99@gmail.com](mailto:luca.breebaart99@gmail.com)
+Project Link: [https://github.com/LucaBreebaart/formins](https://github.com/LucaBreebaart/formins)

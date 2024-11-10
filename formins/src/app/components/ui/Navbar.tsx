@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenuToggle, NavbarMenu, NavbarMenuItem, Button } from "@nextui-org/react";
+import Image from "next/image";
 import { handleSignOut } from "@/app/services/authService";
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -36,22 +37,25 @@ export default function StyledNavBar() {
           className="sm:hidden"
         />
         <NavbarBrand>
-          <Link href="/" className="font-bold text-inherit">
-            FORMINS
-          </Link>
+          <Image
+            src="images/logo.svg"
+            alt="Logo"
+            width={60}
+            height={20}
+          />
         </NavbarBrand>
       </NavbarContent>
 
       {isLoggedIn && (
         <NavbarContent className="hidden sm:flex gap-4" justify="center">
-          <NavbarItem isActive={isActive('/profile')}>
-            <Link href="/profile" className={`${isActive('/profile') ? 'text-foreground' : 'text-foreground'}`}>
-              Profile
-            </Link>
-          </NavbarItem>
           <NavbarItem isActive={isActive('/')}>
             <Link href="/" className={`${isActive('/') ? 'text-foreground' : 'text-foreground'}`}>
               Dashboard
+            </Link>
+          </NavbarItem>
+          <NavbarItem isActive={isActive('/profile')}>
+            <Link href="/profile" className={`${isActive('/profile') ? 'text-foreground' : 'text-foreground'}`}>
+              Profile
             </Link>
           </NavbarItem>
         </NavbarContent>
