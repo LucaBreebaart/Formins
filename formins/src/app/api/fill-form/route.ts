@@ -6,7 +6,7 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const pdfFile = formData.get('pdf') as File;
     const valuesJson = formData.get('values') as string;
-    
+
     if (!pdfFile || !valuesJson) {
       return NextResponse.json({
         error: 'Missing required data'
@@ -38,14 +38,14 @@ export async function POST(request: Request) {
           const base64Data = value.split(',')[1];
           const signatureBytes = Buffer.from(base64Data, 'base64');
           const signatureImage = await pdfDoc.embedPng(signatureBytes);
-          
+
           const signatureField = field;
           const widgets = signatureField.acroField.getWidgets();
-          
+
           for (const widget of widgets) {
             const { x, y, width, height } = widget.getRectangle();
             const page = pdfDoc.getPages()[0]; // Assuming first page
-            
+
             // Draw signature
             page.drawImage(signatureImage, {
               x,
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
               opacity: 0.9
             });
           }
-          
+
           // Remove the original field
           form.removeField(field);
         } else if (typeof value === 'boolean') {

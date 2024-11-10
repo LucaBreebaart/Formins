@@ -67,6 +67,13 @@ function getTextFromSegments(text: string, segments: Array<{ startIndex: string;
   }).join('');
 }
 
+function normalizeFieldName(name: string): string {
+  return name.trim()
+    .replace(/[^a-zA-Z0-9\s]/g, '')
+    .replace(/\s+/g, '_')
+    .toLowerCase();
+}
+
 function getFieldType(fieldName: string): string {
   const name = fieldName.toLowerCase();
   if (name.includes('email')) return 'email';
@@ -76,33 +83,32 @@ function getFieldType(fieldName: string): string {
   return 'text';
 }
 
-function normalizeFieldName(name: string): string {
-  return name.trim()
-    .replace(/[^a-zA-Z0-9\s]/g, '')
-    .replace(/\s+/g, '_')
-    .toLowerCase();
-}
-
 function calculatePDFCoordinates(
   vertices: Array<{ x: number; y: number }>,
   pageWidth: number,
-  pageHeight: number
+  pageHeight: number,
+  text: string
 ) {
-  // PDF coordinates start from bottom-left
-  // Convert Document AI coordinates (top-left) to PDF coordinates
-  const x = vertices[0].x * pageWidth; // left edge
-  const y = pageHeight - (vertices[0].y * pageHeight); // convert top to bottom coordinate
+  // Find position of the colon
+  const colonIndex = text.indexOf(':');
+  const textBeforeColon = text.substring(0, colonIndex + 1);
+
+  const averageCharWidth = 6.5;
+  const estimatedColonPosition = textBeforeColon.length * averageCharWidth;
+
+  // Calculate coordinates
+  const x = vertices[0].x * pageWidth;
+  const y = pageHeight - (vertices[0].y * pageHeight);
   const width = (vertices[1].x - vertices[0].x) * pageWidth;
   const height = (vertices[2].y - vertices[0].y) * pageHeight;
 
   return {
-    x: x + 5, // Small offset for better alignment
-    y: y - height - 5, // Adjust for height and add small offset
-    width: Math.max(width * 2, 150), // Make fields wide enough for input
-    height: Math.max(height, 20) // Minimum height for better usability
+    x: x + estimatedColonPosition + 5,
+    y: y - height - 5,
+    width: Math.max(width * 1.5, 200),
+    height: Math.max(height, 20)
   };
 }
-
 
 
 export async function POST(request: Request) {
@@ -148,42 +154,55 @@ export async function POST(request: Request) {
     }
 
     // Clear existing form fields
-    const existingFields = form.getFields();
-    existingFields.forEach(field => {
-      form.removeField(field);
-    });
+    // const existingFields = form.getFields();
+    // existingFields.forEach(field => {
+    //   form.removeField(field);
+    // });
 
     // Process fields from Document AI layout and create PDF form fields
     document.pages[0].paragraphs.forEach((paragraph) => {
       const content = getTextFromSegments(document.text, paragraph.layout.textAnchor.textSegments);
       if (content.includes(':') && !content.includes('TEL:') && !content.includes('FAX:')) {
+        // First, split and normalize field name
         const [fieldName, suggestedValue] = content.split(':').map(s => s.trim());
         const normalizedFieldName = normalizeFieldName(fieldName);
         const vertices = paragraph.layout.boundingPoly.normalizedVertices;
 
+        // Then check if field exists
         if (!formFields.find(f => f.name === normalizedFieldName)) {
           const isCheckbox = content.toLowerCase().includes('confirm') ||
             content.toLowerCase().includes('agree') ||
             content.toLowerCase().includes('yes') ||
             content.toLowerCase().includes('no');
 
-          // Calculate proper PDF coordinates
+          // Calculate proper PDF coordinates with content awareness
           const bounds = calculatePDFCoordinates(
             vertices,
             width,
-            height
+            height,
+            content
           );
 
-          // Adjust field positioning based on type
+          // Adjust bounds based on field type
           if (isCheckbox) {
-            bounds.width = 15; // Fixed size for checkboxes
+            bounds.width = 15;
             bounds.height = 15;
+            bounds.x += 30;
           } else if (fieldName.toLowerCase().includes('signature')) {
-            bounds.height = 50; // Larger height for signatures
-            bounds.width = Math.max(bounds.width, 200); // Minimum width for signatures
+            bounds.height = 50;
+            bounds.width = Math.min(bounds.width, 300);
+          } else {
+            if (fieldName.toLowerCase().includes('email')) {
+              bounds.width = Math.min(bounds.width, 250);
+            } else if (fieldName.toLowerCase().includes('phone')) {
+              bounds.width = Math.min(bounds.width, 150);
+            } else if (fieldName.toLowerCase().includes('name')) {
+              bounds.width = Math.min(bounds.width, 200);
+            }
           }
 
           try {
+            // Create field with calculated bounds
             if (isCheckbox) {
               const checkbox = form.createCheckBox(normalizedFieldName);
               checkbox.addToPage(firstPage, {
@@ -204,7 +223,7 @@ export async function POST(request: Request) {
                 borderColor: rgb(0.7, 0.7, 0.7),
                 borderWidth: 1,
               });
-              signatureField.setFontSize(0); // Hide text for signature fields
+              signatureField.setFontSize(0);
             } else {
               const textField = form.createTextField(normalizedFieldName);
               textField.addToPage(firstPage, {
@@ -218,7 +237,6 @@ export async function POST(request: Request) {
               textField.setFontSize(11);
             }
 
-            // Store exact field name for later use
             formFields.push({
               name: normalizedFieldName,
               type: getFieldType(fieldName),
@@ -241,60 +259,6 @@ export async function POST(request: Request) {
       }
     });
 
-
-    // Handle YES/NO checkboxes
-    const yesNoGroups = [
-      'Contact allowed via SMS, telephone call and/or E-mail for updates on repair progress',
-      'Confirmation of PI sharing to independent CSI accrediting authority Lightstone Consumer'
-    ];
-
-    yesNoGroups.forEach((groupName, index) => {
-      const paragraph = document.pages[0].paragraphs.find(p =>
-        getTextFromSegments(document.text, p.layout.textAnchor.textSegments).includes(groupName)
-      );
-
-      if (paragraph) {
-        const vertices = paragraph.layout.boundingPoly.normalizedVertices;
-        const baseY = vertices[0].y + (index * 0.05); // Offset for multiple groups
-
-        const normalizedGroupName = normalizeFieldName(groupName);
-
-        ['yes', 'no'].forEach((option, optionIndex) => {
-          const fieldName = `${normalizedGroupName}_${option}`;
-          const checkbox = form.createCheckBox(fieldName);
-
-          const checkboxBounds = {
-            x: (vertices[1].x + 0.05 + (optionIndex * 0.1)) * width,
-            y: (1 - baseY) * height - (height * 0.05),
-            width: width * 0.03,
-            height: width * 0.03
-          };
-
-          checkbox.addToPage(firstPage, {
-            x: checkboxBounds.x,
-            y: checkboxBounds.y,
-            width: checkboxBounds.width,
-            height: checkboxBounds.height,
-            borderColor: rgb(0.7, 0.7, 0.7),
-            borderWidth: 1,
-          });
-
-          formFields.push({
-            name: fieldName,
-            type: 'checkbox',
-            page: 0,
-            required: true,
-            isCheckbox: true,
-            bounds: {
-              x: vertices[1].x + 0.05 + (optionIndex * 0.1),
-              y: baseY,
-              width: 0.03,
-              height: 0.03
-            }
-          });
-        });
-      }
-    });
 
     // Save the modified PDF with form fields
     const modifiedPdfBytes = await pdfDoc.save();
@@ -326,4 +290,5 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+
 }
