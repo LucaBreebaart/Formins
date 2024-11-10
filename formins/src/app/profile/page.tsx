@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { auth } from "@/app/firebase";
 import { getUserProfile, updateUserProfile } from "../services/profileService";
 import { UserProfile } from "../types/user";
+import StyledNavBar from "../components/ui/Navbar";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -103,87 +104,90 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex relative justify-center items-center min-h-screen p-4">
-      <Card className="w-full max-w-2xl">
-        <CardHeader className="flex justify-center">
-          <h1 className="text-2xl font-bold">Profile Information</h1>
-        </CardHeader>
-        <CardBody>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="First Name"
-                name="firstName"
-                value={profile.firstName || ''}
-                onChange={handleChange}
-                variant="bordered"
-              />
-              <Input
-                label="Last Name"
-                name="lastName"
-                value={profile.lastName || ''}
-                onChange={handleChange}
-                variant="bordered"
-              />
-            </div>
+    <main className='relative min-h-dvh h-full bg-gray-1 text-foreground'>
+      <StyledNavBar />
+        <div className="flex relative justify-center items-center min-h-screen p-4">
+          <Card className="w-full max-w-2xl">
+            <CardHeader className="flex justify-center">
+              <h1 className="text-2xl font-bold">Profile Information</h1>
+            </CardHeader>
+            <CardBody>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    label="First Name"
+                    name="firstName"
+                    value={profile.firstName || ''}
+                    onChange={handleChange}
+                    variant="bordered"
+                  />
+                  <Input
+                    label="Last Name"
+                    name="lastName"
+                    value={profile.lastName || ''}
+                    onChange={handleChange}
+                    variant="bordered"
+                  />
+                </div>
 
-            <Input
-              label="Phone Number"
-              name="phoneNumber"
-              value={profile.phoneNumber || ''}
-              onChange={handleChange}
-              variant="bordered"
-            />
-
-            <div className="space-y-4">
-              <Input
-                label="Street Address"
-                name="address.street"
-                value={profile.address?.street || ''}
-                onChange={handleChange}
-                variant="bordered"
-              />
-              <Input
-                label="City"
-                name="address.city"
-                value={profile.address?.city || ''}
-                onChange={handleChange}
-                variant="bordered"
-              />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Input
-                  label="State"
-                  name="address.state"
-                  value={profile.address?.state || ''}
+                  label="Phone Number"
+                  name="phoneNumber"
+                  value={profile.phoneNumber || ''}
                   onChange={handleChange}
                   variant="bordered"
                 />
-                <Input
-                  label="Zip Code"
-                  name="address.zipCode"
-                  value={profile.address?.zipCode || ''}
-                  onChange={handleChange}
-                  variant="bordered"
-                />
-                <Input
-                  label="Country"
-                  name="address.country"
-                  value={profile.address?.country || ''}
-                  onChange={handleChange}
-                  variant="bordered"
-                />
-              </div>
-            </div>
 
-            {error && <p className="text-red-500">{error}</p>}
-            {success && <p className="text-green-500">{success}</p>}
+                <div className="space-y-4">
+                  <Input
+                    label="Street Address"
+                    name="address.street"
+                    value={profile.address?.street || ''}
+                    onChange={handleChange}
+                    variant="bordered"
+                  />
+                  <Input
+                    label="City"
+                    name="address.city"
+                    value={profile.address?.city || ''}
+                    onChange={handleChange}
+                    variant="bordered"
+                  />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Input
+                      label="State"
+                      name="address.state"
+                      value={profile.address?.state || ''}
+                      onChange={handleChange}
+                      variant="bordered"
+                    />
+                    <Input
+                      label="Zip Code"
+                      name="address.zipCode"
+                      value={profile.address?.zipCode || ''}
+                      onChange={handleChange}
+                      variant="bordered"
+                    />
+                    <Input
+                      label="Country"
+                      name="address.country"
+                      value={profile.address?.country || ''}
+                      onChange={handleChange}
+                      variant="bordered"
+                    />
+                  </div>
+                </div>
 
-            <Button type="submit" color="primary" className="w-full">
-              Save Profile
-            </Button>
-          </form>
-        </CardBody>
-      </Card>
-    </div>
+                {error && <p className="text-red-500">{error}</p>}
+                {success && <p className="text-green-500">{success}</p>}
+
+                <Button type="submit" color="primary" className="w-full">
+                  Save Profile
+                </Button>
+              </form>
+            </CardBody>
+          </Card>
+        </div>
+    </main>
   );
 }

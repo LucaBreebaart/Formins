@@ -45,12 +45,12 @@ export default function StyledNavBar() {
       {isLoggedIn && (
         <NavbarContent className="hidden sm:flex gap-4" justify="center">
           <NavbarItem isActive={isActive('/profile')}>
-            <Link href="/profile" className={`${isActive('/profile') ? 'text-primary' : 'text-foreground'}`}>
+            <Link href="/profile" className={`${isActive('/profile') ? 'text-foreground' : 'text-foreground'}`}>
               Profile
             </Link>
           </NavbarItem>
           <NavbarItem isActive={isActive('/')}>
-            <Link href="/dashboard" className={`${isActive('/dashboard') ? 'text-primary' : 'text-foreground'}`}>
+            <Link href="/" className={`${isActive('/') ? 'text-foreground' : 'text-foreground'}`}>
               Dashboard
             </Link>
           </NavbarItem>
@@ -78,7 +78,7 @@ export default function StyledNavBar() {
           <NavbarMenuItem>
             <Link
               href="/profile"
-              className={`w-full text-lg ${isActive('/profile') ? 'text-primary' : 'text-foreground'}`}
+              className={`w-full text-lg ${isActive('/profile') ? 'text-foreground' : 'text-foreground'}`}
             >
               Profile
             </Link>
@@ -86,7 +86,7 @@ export default function StyledNavBar() {
           <NavbarMenuItem>
             <Link
               href="/"
-              className={`w-full text-lg ${isActive('/') ? 'text-primary' : 'text-foreground'}`}
+              className={`w-full text-lg ${isActive('/') ? 'text-foreground' : 'text-foreground'}`}
             >
               Dashboard
             </Link>
