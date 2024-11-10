@@ -259,7 +259,6 @@ export async function POST(request: Request) {
       }
     });
 
-
     // Save the modified PDF with form fields
     const modifiedPdfBytes = await pdfDoc.save();
     const modifiedPdfBase64 = Buffer.from(modifiedPdfBytes).toString('base64');

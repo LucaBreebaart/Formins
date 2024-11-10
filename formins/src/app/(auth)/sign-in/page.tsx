@@ -61,98 +61,107 @@ const AuthPage = () => {
   };
 
   return (
-    <BackgroundLines className="flex items-center justify-center w-full flex-col px-4">
-      <Card className="flex justify-center w-full max-w-sm h-fit">
-        <CardHeader className="flex justify-center ">
-          <h2 className="text-2xl font-bold">{isLogin ? "Login" : "Register"}</h2>
-        </CardHeader>
-        <CardBody>
-          <form onSubmit={handleSubmit} className="space-y-6">
+    <BackgroundLines className="min-h-screen w-full flex items-center justify-center px-4">
+      <div className="w-full max-w-md space-y-8 bg-gray-1/80 backdrop-blur-sm p-8 rounded-xl">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-foreground mb-2">
+            {isLogin ? "Welcome back" : "Create account"}
+          </h2>
+          <p className="text-sm text-gray-400">
+            {isLogin 
+              ? "Enter your details to sign in" 
+              : "Enter your details to get started"}
+          </p>
+        </div>
+
+        <form className="space-y-6">
+          <Input
+            type="email"
+            label="Email"
+            variant="bordered"
+            classNames={{
+              input: "bg-transparent",
+              inputWrapper: "bg-gray-2/50 border-gray-3 hover:border-green-1",
+              label: "text-gray-400"
+            }}
+          />
+
+          {!isLogin && (
             <Input
-              type="email"
-              label="Email"
+              type="text"
+              label="Username"
               variant="bordered"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              classNames={{
+                input: "bg-transparent",
+                inputWrapper: "bg-gray-2/50 border-gray-3 hover:border-green-1",
+                label: "text-gray-400"
+              }}
             />
+          )}
 
-            {!isLogin && (
-              <Input
-                type="text"
-                label="Username"
-                variant="bordered"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            )}
+          <Input
+            label="Password"
+            variant="bordered"
+            endContent={
+              <button className="focus:outline-none" type="button" onClick={() => setIsVisible(!isVisible)}>
+                {isVisible ? (
+                  <EyeSlashFilledIcon className="text-xl text-default-400" />
+                ) : (
+                  <EyeFilledIcon className="text-xl text-default-400" />
+                )}
+              </button>
+            }
+            type={isVisible ? "text" : "password"}
+            classNames={{
+              input: "bg-transparent",
+              inputWrapper: "bg-gray-2/50 border-gray-3 hover:border-green-1",
+              label: "text-gray-400"
+            }}
+          />
 
+          {!isLogin && (
             <Input
-              label="Password"
+              label="Confirm Password"
               variant="bordered"
               endContent={
-                <button className="focus:outline-none" type="button" onClick={toggleVisibility}>
-                  {isVisible ? (
-                    <EyeSlashFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+                <button className="focus:outline-none" type="button" onClick={() => setIsVisible1(!isVisible1)}>
+                  {isVisible1 ? (
+                    <EyeSlashFilledIcon className="text-xl text-default-400" />
                   ) : (
-                    <EyeFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+                    <EyeFilledIcon className="text-xl text-default-400" />
                   )}
                 </button>
               }
-              type={isVisible ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-
-            {!isLogin && (
-              <Input
-                label="Confirm Password"
-                variant="bordered"
-                endContent={
-                  <button className="focus:outline-none" type="button" onClick={toggleVisibility1}>
-                    {isVisible1 ? (
-                      <EyeSlashFilledIcon className="text-2xl text-default-400 pointer-events-none" />
-                    ) : (
-                      <EyeFilledIcon className="text-2xl text-default-400 pointer-events-none" />
-                    )}
-                  </button>
-                }
-                type={isVisible1 ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            )}
-
-            {error && <p className="text-red-500">{error}</p>}
-            {message && <p className="text-green-500">{message}</p>}
-            <Button type="submit" color="secondary" fullWidth>
-              {isLogin ? "Login" : "Register"}
-            </Button>
-          </form>
-
-          <div className="mt-4 text-center">
-            <Link
-              className="text-white"
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setIsLogin(!isLogin);
-                setError("");
-                setMessage("");
-                setPassword("");
-                setConfirmPassword("");
+              type={isVisible1 ? "text" : "password"}
+              classNames={{
+                input: "bg-transparent",
+                inputWrapper: "bg-gray-2/50 border-gray-3 hover:border-green-1",
+                label: "text-gray-400"
               }}
-            >
-              {isLogin ? "Need an account? Register" : "Already have an account? Login"}
-            </Link>
-          </div>
-        </CardBody>
-      </Card>
+            />
+          )}
+
+          <Button 
+            type="submit" 
+            className="w-full bg-secondary text-white font-semibold  transition-colors"
+          >
+            {isLogin ? "Sign in" : "Create account"}
+          </Button>
+        </form>
+
+        <div className="text-center">
+          <button
+            onClick={() => setIsLogin(!isLogin)}
+            className="text-sm text-gray-400 hover:text-green-1 transition-colors"
+          >
+            {isLogin 
+              ? "Don't have an account? Sign up" 
+              : "Already have an account? Sign in"}
+          </button>
+        </div>
+      </div>
     </BackgroundLines>
   );
-}
+};
 
 export default AuthPage;
