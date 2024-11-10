@@ -3,15 +3,11 @@
 import React, { useState } from "react";
 import { Button, Input, Card, CardBody, CardHeader, Link } from "@nextui-org/react";
 import { useRouter } from 'next/navigation';
-import { handleRegister, handlelogin  } from "@/app/services/authService";
+import { handleRegister, handlelogin } from "@/app/services/authService";
 import { EyeFilledIcon } from "../../images/icons/EyeFilledIcon";
 import { EyeSlashFilledIcon } from "../../images/icons/EyeSlashFilledIcon";
 
-interface LoginPageProps {
-  onLogin: () => void;
-}
-
-const AuthPage: React.FC<LoginPageProps> = ({ onLogin }) => {
+const AuthPage = () => {  
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,15 +37,14 @@ const AuthPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       if (isLogin) {
         // Login
         await handlelogin(email, password);
-        setMessage("Login successful!");
-        onLogin();
+        // setMessage("Login successful!");
+        router.push('/'); 
       } else {
-        // Register
         const success = await handleRegister({
           username,
           email,
           password,
-          profilePhoto: "" //add a file input for profile photo
+          profilePhoto: "" //add file input
         });
         if (success) {
           setMessage("Registration successful! You can now log in.");
