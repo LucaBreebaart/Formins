@@ -105,90 +105,154 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className='relative min-h-dvh h-full bg-gray-1 text-foreground'>
+    <div className="min-h-screen bg-background">
       <StyledNavBar />
-      <div className="flex relative justify-center items-center min-h-screen p-4">
-        <Card className="w-full max-w-2xl">
-          <CardHeader className="flex justify-center">
-            <h1 className="text-2xl font-bold">Profile Information</h1>
-          </CardHeader>
-          <CardBody>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  label="First Name"
-                  name="firstName"
-                  value={profile.firstName || ''}
-                  onChange={handleChange}
-                  variant="bordered"
-                />
-                <Input
-                  label="Last Name"
-                  name="lastName"
-                  value={profile.lastName || ''}
-                  onChange={handleChange}
-                  variant="bordered"
-                />
-              </div>
+      <div className="max-w-4xl mx-auto px-4 py-12">
+        <div className="space-y-8">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Profile Settings</h1>
+            <p className="text-gray-400 mt-2">Update your personal information and address</p>
+          </div>
 
-              <Input
-                label="Phone Number"
-                name="phoneNumber"
-                value={profile.phoneNumber || ''}
-                onChange={handleChange}
-                variant="bordered"
-              />
+          <div className="bg-gray-1/80 backdrop-blur-sm rounded-xl p-6 space-y-8">
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-8">
+                {/* Personal Information Section */}
+                <div className="space-y-6">
+                  <h2 className="text-xl font-semibold text-foreground">Personal Information</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Input
+                      label="First Name"
+                      name="firstName"
+                      value={profile.firstName || ''}
+                      onChange={handleChange}
+                      variant="bordered"
+                      classNames={{
+                        input: "bg-transparent",
+                        inputWrapper: "bg-gray-2/50 border-gray-3 hover:border-green-1",
+                        label: "text-gray-400"
+                      }}
+                    />
+                    <Input
+                      label="Last Name"
+                      name="lastName"
+                      value={profile.lastName || ''}
+                      onChange={handleChange}
+                      variant="bordered"
+                      classNames={{
+                        input: "bg-transparent",
+                        inputWrapper: "bg-gray-2/50 border-gray-3 hover:border-green-1",
+                        label: "text-gray-400"
+                      }}
+                    />
+                    <Input
+                      label="Phone Number"
+                      name="phoneNumber"
+                      value={profile.phoneNumber || ''}
+                      onChange={handleChange}
+                      variant="bordered"
+                      classNames={{
+                        input: "bg-transparent",
+                        inputWrapper: "bg-gray-2/50 border-gray-3 hover:border-green-1",
+                        label: "text-gray-400"
+                      }}
+                    />
+                  </div>
+                </div>
 
-              <div className="space-y-4">
-                <Input
-                  label="Street Address"
-                  name="address.street"
-                  value={profile.address?.street || ''}
-                  onChange={handleChange}
-                  variant="bordered"
-                />
-                <Input
-                  label="City"
-                  name="address.city"
-                  value={profile.address?.city || ''}
-                  onChange={handleChange}
-                  variant="bordered"
-                />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Input
-                    label="State"
-                    name="address.state"
-                    value={profile.address?.state || ''}
-                    onChange={handleChange}
-                    variant="bordered"
-                  />
-                  <Input
-                    label="Zip Code"
-                    name="address.zipCode"
-                    value={profile.address?.zipCode || ''}
-                    onChange={handleChange}
-                    variant="bordered"
-                  />
-                  <Input
-                    label="Country"
-                    name="address.country"
-                    value={profile.address?.country || ''}
-                    onChange={handleChange}
-                    variant="bordered"
-                  />
+                {/* Address Section */}
+                <div className="space-y-6">
+                  <h2 className="text-xl font-semibold text-foreground">Address</h2>
+                  <div className="space-y-6">
+                    <Input
+                      label="Street Address"
+                      name="address.street"
+                      value={profile.address?.street || ''}
+                      onChange={handleChange}
+                      variant="bordered"
+                      classNames={{
+                        input: "bg-transparent",
+                        inputWrapper: "bg-gray-2/50 border-gray-3 hover:border-green-1",
+                        label: "text-gray-400"
+                      }}
+                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <Input
+                        label="City"
+                        name="address.city"
+                        value={profile.address?.city || ''}
+                        onChange={handleChange}
+                        variant="bordered"
+                        classNames={{
+                          input: "bg-transparent",
+                          inputWrapper: "bg-gray-2/50 border-gray-3 hover:border-green-1",
+                          label: "text-gray-400"
+                        }}
+                      />
+                      <Input
+                        label="State"
+                        name="address.state"
+                        value={profile.address?.state || ''}
+                        onChange={handleChange}
+                        variant="bordered"
+                        classNames={{
+                          input: "bg-transparent",
+                          inputWrapper: "bg-gray-2/50 border-gray-3 hover:border-green-1",
+                          label: "text-gray-400"
+                        }}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <Input
+                        label="Zip Code"
+                        name="address.zipCode"
+                        value={profile.address?.zipCode || ''}
+                        onChange={handleChange}
+                        variant="bordered"
+                        classNames={{
+                          input: "bg-transparent",
+                          inputWrapper: "bg-gray-2/50 border-gray-3 hover:border-green-1",
+                          label: "text-gray-400"
+                        }}
+                      />
+                      <Input
+                        label="Country"
+                        name="address.country"
+                        value={profile.address?.country || ''}
+                        onChange={handleChange}
+                        variant="bordered"
+                        classNames={{
+                          input: "bg-transparent",
+                          inputWrapper: "bg-gray-2/50 border-gray-3 hover:border-green-1",
+                          label: "text-gray-400"
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Feedback Messages */}
+                {error && (
+                  <p className="text-red-500 text-sm">{error}</p>
+                )}
+                {success && (
+                  <p className="text-green-500 text-sm">{success}</p>
+                )}
+
+                {/* Submit Button */}
+                <div className="pt-4">
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-secondary text-white font-semibold transition-colors"
+                  >
+                    Save Changes
+                  </Button>
                 </div>
               </div>
-
-              {error && <p className="text-red-500">{error}</p>}
-              {success && <p className="text-green-500">{success}</p>}
-
-              <Button type="submit" color="primary" className="w-full">
-                Save Profile
-              </Button>
             </form>
-          </CardBody>
-        </Card>
+          </div>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

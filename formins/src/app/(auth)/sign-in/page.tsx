@@ -1,12 +1,11 @@
-"use client";
+"use client"
 
 import React, { useState } from "react";
-import { Button, Input, Card, CardBody, CardHeader, Link } from "@nextui-org/react";
+import { Button, Input } from "@nextui-org/react";
 import { useRouter } from 'next/navigation';
 import { handleRegister, handlelogin } from "@/app/services/authService";
 import { EyeFilledIcon } from "../../../../public/icons/EyeFilledIcon";
 import { EyeSlashFilledIcon } from "../../../../public/icons/EyeSlashFilledIcon";
-
 import { BackgroundLines } from "@/components/ui/background-lines";
 
 const AuthPage = () => {
@@ -37,9 +36,7 @@ const AuthPage = () => {
 
     try {
       if (isLogin) {
-        // Login
         await handlelogin(email, password);
-        // setMessage("Login successful!");
         router.push('/');
       } else {
         const success = await handleRegister({
@@ -74,10 +71,12 @@ const AuthPage = () => {
           </p>
         </div>
 
-        <form className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <Input
             type="email"
             label="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             variant="bordered"
             classNames={{
               input: "bg-transparent",
@@ -90,6 +89,8 @@ const AuthPage = () => {
             <Input
               type="text"
               label="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               variant="bordered"
               classNames={{
                 input: "bg-transparent",
@@ -101,9 +102,11 @@ const AuthPage = () => {
 
           <Input
             label="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             variant="bordered"
             endContent={
-              <button className="focus:outline-none" type="button" onClick={() => setIsVisible(!isVisible)}>
+              <button className="focus:outline-none" type="button" onClick={toggleVisibility}>
                 {isVisible ? (
                   <EyeSlashFilledIcon className="text-xl text-default-400" />
                 ) : (
@@ -122,9 +125,11 @@ const AuthPage = () => {
           {!isLogin && (
             <Input
               label="Confirm Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               variant="bordered"
               endContent={
-                <button className="focus:outline-none" type="button" onClick={() => setIsVisible1(!isVisible1)}>
+                <button className="focus:outline-none" type="button" onClick={toggleVisibility1}>
                   {isVisible1 ? (
                     <EyeSlashFilledIcon className="text-xl text-default-400" />
                   ) : (
@@ -141,9 +146,12 @@ const AuthPage = () => {
             />
           )}
 
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {message && <p className="text-green-500 text-sm">{message}</p>}
+
           <Button 
             type="submit" 
-            className="w-full bg-secondary text-white font-semibold  transition-colors"
+            className="w-full bg-secondary text-white font-semibold transition-colors"
           >
             {isLogin ? "Sign in" : "Create account"}
           </Button>
@@ -151,7 +159,13 @@ const AuthPage = () => {
 
         <div className="text-center">
           <button
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setError("");
+              setMessage("");
+              setPassword("");
+              setConfirmPassword("");
+            }}
             className="text-sm text-gray-400 hover:text-green-1 transition-colors"
           >
             {isLogin 
