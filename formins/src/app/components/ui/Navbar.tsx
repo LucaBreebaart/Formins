@@ -91,7 +91,7 @@ export default function StyledNavBar() {
             <Button 
               as={Link} 
               href="/sign-in" 
-              className="bg-green-1 text-black font-medium hover:bg-green-2 transition-colors"
+              className="bg-secondary text-black bold font-medium hover:bg-green-2 transition-colors"
             >
               Sign In
             </Button>

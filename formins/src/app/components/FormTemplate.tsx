@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button, Input, Card, Checkbox } from '@nextui-org/react';
+import { Button, Input, Card, Checkbox, Spinner } from '@nextui-org/react';
 import SignaturePad from 'react-signature-canvas';
 import PDFPreview from './PDFPreview';
 import { FormField, SignatureCanvas } from '../types/form';
@@ -212,7 +212,19 @@ export default function FormTemplate() {
             </div>
           )}
 
-          {loading && <p className='mt-2' >Analyzing form...</p>}
+          {loading && (
+            <div className="flex items-center gap-2 mt-4 m-y-4">
+              <Spinner
+                size="sm"
+                color="success"
+                classNames={{
+                  circle1: "border-b-green-1",
+                  circle2: "border-b-green-1"
+                }}
+              />
+              <p className="text-gray-400 text-sm">Analyzing form...</p>
+            </div>
+          )}
 
           {fields.length > 0 && (
             <div className="space-y-6">
