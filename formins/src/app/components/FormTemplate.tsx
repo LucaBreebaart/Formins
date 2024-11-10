@@ -12,29 +12,70 @@ export default function FormTemplate() {
   const [fields, setFields] = useState<FormField[]>([]);
   const [loading, setLoading] = useState(false);
   const [values, setValues] = useState<Record<string, any>>({});
-  const signatureRefs = useRef<{ [key: string]: SignatureCanvas }>({});
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [profileLoading, setProfileLoading] = useState(true);
+  const signatureRefs = useRef<{ [key: string]: SignatureCanvas }>({});
+
+  const loadUserProfile = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        const profile = await getUserProfile(user.uid);
+        setUserProfile(profile);
+      } catch (error) {
+        console.error("Error loading user profile:", error);
+      }
+    }
+  };
 
   useEffect(() => {
-    const loadUserProfile = async () => {
-      const user = auth.currentUser;
-      if (user) {
-        try {
-          const profile = await getUserProfile(user.uid);
-          setUserProfile(profile);
-        } catch (error) {
-          console.error("Error loading user profile:", error);
-        } finally {
-          setProfileLoading(false);
-        }
-      } else {
-        setProfileLoading(false);
-      }
-    };
-
     loadUserProfile();
   }, []);
+
+  const processFieldsWithAutofill = (fields: FormField[], userProfile: UserProfile | null) => {
+    const initialValues: Record<string, any> = {};
+    
+    fields.forEach((field: FormField) => {
+      const fieldNameLower = field.name.toLowerCase();
+
+      if (field.isCheckbox) {
+        initialValues[field.name] = false;
+      } else if (field.isSignature) {
+        initialValues[field.name] = '';
+      } else if (userProfile) {
+        if (fieldNameLower.includes('name') || fieldNameLower.includes('full name')) {
+          initialValues[field.name] = `${userProfile.firstName} ${userProfile.lastName}`;
+        } else if (fieldNameLower.includes('first name')) {
+          initialValues[field.name] = userProfile.firstName;
+        } else if (fieldNameLower.includes('last name') || fieldNameLower.includes('surname')) {
+          initialValues[field.name] = userProfile.lastName;
+        } else if (fieldNameLower.includes('email')) {
+          initialValues[field.name] = userProfile.email;
+        } else if (fieldNameLower.includes('phone')) {
+          initialValues[field.name] = userProfile.phoneNumber;
+        } else if (fieldNameLower.includes('address')) {
+          if (fieldNameLower.includes('street')) {
+            initialValues[field.name] = userProfile.address.street;
+          } else if (fieldNameLower.includes('city')) {
+            initialValues[field.name] = userProfile.address.city;
+          } else if (fieldNameLower.includes('state') || fieldNameLower.includes('province')) {
+            initialValues[field.name] = userProfile.address.state;
+          } else if (fieldNameLower.includes('zip') || fieldNameLower.includes('postal')) {
+            initialValues[field.name] = userProfile.address.zipCode;
+          } else if (fieldNameLower.includes('country')) {
+            initialValues[field.name] = userProfile.address.country;
+          } else {
+            initialValues[field.name] = `${userProfile.address.street}, ${userProfile.address.city}, ${userProfile.address.state} ${userProfile.address.zipCode}`;
+          }
+        }
+      }
+      
+      if (!initialValues[field.name]) {
+        initialValues[field.name] = field.suggestedValue || '';
+      }
+    });
+
+    return initialValues;
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -53,7 +94,6 @@ export default function FormTemplate() {
 
       if (!response.ok) throw new Error(data.error);
 
-      // Process fields to identify signatures and checkboxes
       const processedFields = data.formFields.map((field: FormField) => ({
         ...field,
         isSignature: field.name.toLowerCase().includes('signature') ||
@@ -67,52 +107,10 @@ export default function FormTemplate() {
 
       setFields(processedFields);
 
-      // Initialise values with autofill data when available
-      const initialValues: Record<string, any> = {};
-      processedFields.forEach((field: FormField) => {
-        const fieldNameLower = field.name.toLowerCase();
-
-        // Handle checkboxes and signatures first
-        if (field.isCheckbox) {
-          initialValues[field.name] = false;
-        } else if (field.isSignature) {
-          initialValues[field.name] = '';
-        } else if (userProfile) {
-          // Autofill logic for text fields
-          if (fieldNameLower.includes('name') || fieldNameLower.includes('full name')) {
-            initialValues[field.name] = `${userProfile.firstName} ${userProfile.lastName}`;
-          } else if (fieldNameLower.includes('first name')) {
-            initialValues[field.name] = userProfile.firstName;
-          } else if (fieldNameLower.includes('last name') || fieldNameLower.includes('surname')) {
-            initialValues[field.name] = userProfile.lastName;
-          } else if (fieldNameLower.includes('email')) {
-            initialValues[field.name] = userProfile.email;
-          } else if (fieldNameLower.includes('phone')) {
-            initialValues[field.name] = userProfile.phoneNumber;
-          } else if (fieldNameLower.includes('address')) {
-            if (fieldNameLower.includes('street')) {
-              initialValues[field.name] = userProfile.address.street;
-            } else if (fieldNameLower.includes('city')) {
-              initialValues[field.name] = userProfile.address.city;
-            } else if (fieldNameLower.includes('state') || fieldNameLower.includes('province')) {
-              initialValues[field.name] = userProfile.address.state;
-            } else if (fieldNameLower.includes('zip') || fieldNameLower.includes('postal')) {
-              initialValues[field.name] = userProfile.address.zipCode;
-            } else if (fieldNameLower.includes('country')) {
-              initialValues[field.name] = userProfile.address.country;
-            } else {
-              initialValues[field.name] = `${userProfile.address.street}, ${userProfile.address.city}, ${userProfile.address.state} ${userProfile.address.zipCode}`;
-            }
-          } else {
-            initialValues[field.name] = field.suggestedValue || '';
-          }
-        } else {
-          initialValues[field.name] = field.suggestedValue || '';
-        }
-      });
-
+      const initialValues = processFieldsWithAutofill(processedFields, userProfile);
       setValues(initialValues);
       setFile(file);
+
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -123,7 +121,6 @@ export default function FormTemplate() {
   const handleFillForm = async () => {
     if (!file) return;
 
-    // Convert signatures to values and prepare checkbox values
     const formValues = { ...values };
     fields.forEach(field => {
       if (field.isSignature && signatureRefs.current[field.name]) {
@@ -163,14 +160,6 @@ export default function FormTemplate() {
     }
   };
 
-  if (profileLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div>Loading ...</div>
-      </div>
-    );
-  }
-
   return (
     <div className="p-4">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -181,6 +170,12 @@ export default function FormTemplate() {
             accept=".pdf"
             className="mb-4"
           />
+
+          {!auth.currentUser && fields.length > 0 && (
+            <div className="mb-4 p-4 bg-blue-100 text-blue-700 rounded">
+              Sign in to enable auto-fill features with your profile information
+            </div>
+          )}
 
           {loading && <p>Analyzing form...</p>}
 
