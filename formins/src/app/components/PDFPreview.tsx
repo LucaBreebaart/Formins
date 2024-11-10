@@ -63,7 +63,7 @@ const PDFPreview = memo(({ file, fields, onFieldClick }: PDFPreviewProps) => {
   }, [pageHeight]);
 
   return (
-    <Card className="p-4 w-full max-w-4xl mx-auto">
+    <Card className="p-4 w-full max-w-4xl mx-auto bg-background">
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
           <Button

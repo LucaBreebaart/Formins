@@ -1,5 +1,3 @@
-"use client"
-
 import React, { useEffect, useState } from "react";
 import { Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenuToggle, NavbarMenu, NavbarMenuItem, Button } from "@nextui-org/react";
 import Image from "next/image";
@@ -30,13 +28,18 @@ export default function StyledNavBar() {
   const isActive = (path: string) => pathname === path;
 
   return (
-    <Navbar onMenuOpenChange={setIsMenuOpen} className="dark relative z-100">
-      <NavbarContent>
+    <Navbar 
+      onMenuOpenChange={setIsMenuOpen} 
+      className="bg-gray-1/80 backdrop-blur-md border-b border-gray-3/50"
+      maxWidth="full"
+      height="4rem"
+    >
+      <NavbarContent className="basis-1/5 sm:basis-full">
         <NavbarMenuToggle
           aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-          className="sm:hidden"
+          className="sm:hidden text-white"
         />
-        <NavbarBrand>
+        <NavbarBrand className="gap-3">
           <Image
             src="images/logo.svg"
             alt="Logo"
@@ -47,14 +50,26 @@ export default function StyledNavBar() {
       </NavbarContent>
 
       {isLoggedIn && (
-        <NavbarContent className="hidden sm:flex gap-4" justify="center">
+        <NavbarContent className="hidden sm:flex gap-6" justify="center">
           <NavbarItem isActive={isActive('/')}>
-            <Link href="/" className={`${isActive('/') ? 'text-foreground' : 'text-foreground'}`}>
+            <Link 
+              href="/" 
+              className={`relative px-3 py-2 text-sm transition-colors duration-200 
+                ${isActive('/') 
+                  ? 'text-green-1 after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-green-1' 
+                  : 'text-gray-400 hover:text-white'}`}
+            >
               Dashboard
             </Link>
           </NavbarItem>
           <NavbarItem isActive={isActive('/profile')}>
-            <Link href="/profile" className={`${isActive('/profile') ? 'text-foreground' : 'text-foreground'}`}>
+            <Link 
+              href="/profile" 
+              className={`relative px-3 py-2 text-sm transition-colors duration-200 
+                ${isActive('/profile') 
+                  ? 'text-green-1 after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-green-1' 
+                  : 'text-gray-400 hover:text-white'}`}
+            >
               Profile
             </Link>
           </NavbarItem>
@@ -64,13 +79,20 @@ export default function StyledNavBar() {
       <NavbarContent justify="end">
         {isLoggedIn ? (
           <NavbarItem>
-            <Button onClick={handleLogout} color="danger">
+            <Button 
+              onClick={handleLogout} 
+              className="hover:bg-gray-2/50 transition-colors"
+            >
               Log Out
             </Button>
           </NavbarItem>
         ) : (
           <NavbarItem>
-            <Button as={Link} href="/sign-in" color="primary">
+            <Button 
+              as={Link} 
+              href="/sign-in" 
+              className="bg-green-1 text-black font-medium hover:bg-green-2 transition-colors"
+            >
               Sign In
             </Button>
           </NavbarItem>
@@ -78,22 +100,41 @@ export default function StyledNavBar() {
       </NavbarContent>
 
       {isLoggedIn && isMenuOpen && (
-        <NavbarMenu>
+        <NavbarMenu className="bg-gray-1/95 backdrop-blur-md pt-6 gap-6">
+          <NavbarMenuItem>
+            <Link
+              href="/"
+              className={`w-full text-base py-2 ${
+                isActive('/') 
+                  ? 'text-green-1' 
+                  : 'text-gray-400 hover:text-white transition-colors'
+              }`}
+            >
+              Dashboard
+            </Link>
+          </NavbarMenuItem>
           <NavbarMenuItem>
             <Link
               href="/profile"
-              className={`w-full text-lg ${isActive('/profile') ? 'text-foreground' : 'text-foreground'}`}
+              className={`w-full text-base py-2 ${
+                isActive('/profile') 
+                  ? 'text-green-1' 
+                  : 'text-gray-400 hover:text-white transition-colors'
+              }`}
             >
               Profile
             </Link>
           </NavbarMenuItem>
           <NavbarMenuItem>
-            <Link
-              href="/"
-              className={`w-full text-lg ${isActive('/') ? 'text-foreground' : 'text-foreground'}`}
+            <Button 
+              onClick={handleLogout} 
+              className="bg-transparent border border-gray-3 text-white hover:bg-gray-2/50 transition-colors mt-4"
+              radius="full"
+              size="sm"
+              fullWidth
             >
-              Dashboard
-            </Link>
+              Log Out
+            </Button>
           </NavbarMenuItem>
         </NavbarMenu>
       )}

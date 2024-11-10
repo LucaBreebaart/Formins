@@ -6,6 +6,7 @@ import { FormField, SignatureCanvas } from '../types/form';
 import { auth } from "@/app/firebase";
 import { getUserProfile } from '../services/profileService';
 import { UserProfile } from '../types/user';
+import { FileUpload } from '@/components/ui/file-upload';
 
 export default function FormTemplate() {
   const [modifiedPdfBase64, setModifiedPdfBase64] = useState<string | null>(null);
@@ -164,16 +165,46 @@ export default function FormTemplate() {
     }
   };
 
+  const handleFileUpload = async (files: File[]) => {
+    if (!files || files.length === 0) return;
+
+    const uploadedFile = files[0]; // Take the first file
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('pdf', uploadedFile);
+
+    try {
+      const response = await fetch('/api/analyze-form', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error);
+
+      setModifiedPdfBase64(data.modifiedPdf);
+      setFields(data.formFields);
+      setFile(uploadedFile);
+
+      const initialValues = processFieldsWithAutofill(data.formFields, userProfile);
+      setValues(initialValues);
+
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="p-4">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className="p-6">
-          <input
-            type="file"
-            onChange={handleFileChange}
-            accept=".pdf"
-            className="mb-4"
-          />
+        <Card className="p-6 bg-background">
+          <div className="w-full h-[auto] border-2 border-dashed border-gray-3/50 rounded-xl transition-all duration-300 bg-background mb-4">
+            <FileUpload
+              onChange={handleFileUpload}
+            />
+          </div>
 
           {!auth.currentUser && fields.length > 0 && (
             <div className="mb-4 p-4 bg-blue-100 text-blue-700 rounded">
@@ -181,10 +212,10 @@ export default function FormTemplate() {
             </div>
           )}
 
-          {loading && <p>Analyzing form...</p>}
+          {loading && <p className='mt-2' >Analyzing form...</p>}
 
           {fields.length > 0 && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {fields.map((field) => (
                 <div key={field.name} className="space-y-2" id={field.name}>
                   {field.isCheckbox ? (
@@ -198,17 +229,21 @@ export default function FormTemplate() {
                             [field.name]: checked
                           })
                         }
+                        classNames={{
+                          label: "text-foreground",
+                          wrapper: "bg-gray-2/50 hover:bg-gray-2/70"
+                        }}
                       />
                       <label
                         htmlFor={field.name}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        className="text-sm text-gray-400"
                       >
                         {field.label || field.name}
                       </label>
                     </div>
                   ) : field.isSignature ? (
-                    <div className="border rounded p-2 bg-white">
-                      <label className="block text-sm font-medium mb-2">
+                    <div className="bg-gray-1/80 backdrop-blur-sm rounded-xl border border-gray-3/50 p-4">
+                      <label className="block text-sm text-gray-400 mb-2">
                         {field.name} {field.required && '*'}
                       </label>
                       <SignaturePad
@@ -218,7 +253,7 @@ export default function FormTemplate() {
                           }
                         }}
                         canvasProps={{
-                          className: 'signature-canvas',
+                          className: 'signature-canvas rounded-lg',
                           width: 500,
                           height: 200,
                           style: {
@@ -226,36 +261,43 @@ export default function FormTemplate() {
                             height: '200px',
                             maxWidth: '500px',
                             backgroundColor: '#fff',
-                            border: '1px solid #e2e8f0',
+                            border: '1px solid rgba(59, 59, 59, 0.5)',
                           }
                         }}
                       />
                       <Button
                         size="sm"
                         onClick={() => signatureRefs.current[field.name]?.clear()}
-                        className="mt-2"
+                        className="mt-2 bg-gray-2/50 text-foreground hover:bg-gray-2/70"
                       >
                         Clear Signature
                       </Button>
                     </div>
                   ) : (
                     <div>
-                      <label className="block text-sm font-medium">
-                        {field.name} {field.required && '*'}
-                      </label>
                       <Input
+                        label={`${field.name}${field.required ? ' *' : ''}`}
                         value={values[field.name] || ''}
                         onChange={(e) =>
                           setValues({ ...values, [field.name]: e.target.value })
                         }
                         placeholder={field.suggestedValue || `Enter ${field.name}`}
+                        variant="bordered"
+                        classNames={{
+                          input: "bg-transparent",
+                          inputWrapper: "bg-gray-2/50 border-gray-3/50 hover:border-green-1",
+                          label: "text-gray-400"
+                        }}
                       />
                     </div>
                   )}
                 </div>
               ))}
 
-              <Button onClick={handleFillForm} className="mt-4">
+              <Button
+                onClick={handleFillForm}
+                className="w-full bg-secondary text-white font-semibold transition-colors mt-6"
+              >
                 Fill and Download PDF
               </Button>
             </div>

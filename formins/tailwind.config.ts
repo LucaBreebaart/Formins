@@ -35,10 +35,10 @@ const config: Config = {
           DEFAULT: "#121212",
           foreground: "#ffffff",
         },
-        // secondary: {
-        //   DEFAULT: "#B8EF58", // Ligther green
-        //   foreground: "#00000",
-        // },
+        secondary: {
+          DEFAULT: "#E35E3F",
+          foreground: "#00000",
+        },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
@@ -64,10 +64,6 @@ const config: Config = {
           1: "#181818", // Custom color gray-1 (dark)
           2: "#292929", // Custom color gray-2 (lighter)
           3: "#3B3B3B", // Custom color gray-3 (lightest)
-        },
-        green: {
-          1: "92E601", //Green
-          2: "#B8EF58", //Lighter Green
         },
         white: {
           DEFAULT: "fff",

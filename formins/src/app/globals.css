@@ -5,6 +5,9 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Add smooth scrolling globally */
+  scroll-behavior: smooth;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -14,41 +17,141 @@
   }
 }
 
+/* Better default rendering */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Improved font loading */
+@font-face {
+  font-display: swap; /* Ensure text remains visible during webfont load */
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+  
+  /* Improved text rendering */
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  
+  /* Better scrolling experience */
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  
+  /* Prevent content shift */
+  overflow-y: scroll;
 }
 
+/* Improved image rendering */
+img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Better transitions */
+* {
+  @apply transition-colors duration-200;
+}
+
+/* Smoother animations */
+@media (prefers-reduced-motion: no-preference) {
+  :root {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Better focus styles */
+:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 2px;
+}
+
+/* Your existing utilities */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+  
+  /* Add useful utilities */
+  .gpu {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
 }
 
+/* Your existing PDF styles with improvements */
 .pdf-preview {
   background-color: #f5f5f5;
   padding: 2rem;
+  border-radius: 0.5rem;
 }
 
 .pdf-page {
   background-color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+              0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease;
 }
 
 .pdf-page canvas {
   display: block;
   margin: 0 auto;
+  max-width: 100%;
+  height: auto;
 }
 
 .field-highlight {
-  transition: background-color 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+  transform: translateZ(0); /* Hardware acceleration */
 }
 
 .field-highlight:hover {
   background-color: rgba(100, 100, 255, 0.3) !important;
+  transform: translateZ(0) scale(1.01);
 }
 
 .field-highlight:hover .field-tooltip {
   visibility: visible !important;
+  opacity: 1;
+}
+
+/* Selection styles */
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Dark mode scrollbar */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
 }
